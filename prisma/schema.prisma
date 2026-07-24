@@ -1,0 +1,247 @@
+// This is your Prisma schema file
+// Learn more at: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum Role {
+  partner
+  admin
+}
+
+enum UserStatus {
+  active
+  blocked
+}
+
+enum Difficulty {
+  easy
+  medium
+  hard
+}
+
+enum BestSeason {
+  spring
+  summer
+  autumn
+  winter
+  all_year
+}
+
+enum LocationStatus {
+  active
+  hidden
+}
+
+enum ServiceStatus {
+  pending
+  approved
+  rejected
+  deleted
+}
+
+enum ModerationAction {
+  approved
+  rejected
+  deleted
+}
+
+// ─────────────────────────────────────────────
+// USERS
+// ─────────────────────────────────────────────
+
+model User {
+  id            BigInt     @id @default(autoincrement())
+  full_name     String     @db.VarChar(150)
+  email         String     @unique @db.VarChar(150)
+  password_hash String     @db.Text
+  phone         String?    @unique @db.VarChar(20)
+  whatsapp      String?    @db.VarChar(20)
+  telegram      String?    @db.VarChar(100)
+  role          Role       @default(partner)
+  status        UserStatus @default(active)
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+  last_login    DateTime?
+
+  // Relations
+  services           PartnerService[]
+  moderation_history ModerationHistory[] @relation("AdminModerations")
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────
+// REGIONS
+// ─────────────────────────────────────────────
+
+model Region {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique @db.VarChar(100)
+  created_at DateTime @default(now())
+
+  // Relations
+  locations Location[]
+
+  @@map("regions")
+}
+
+// ─────────────────────────────────────────────
+// LOCATIONS
+// ─────────────────────────────────────────────
+
+model Location {
+  id              BigInt         @id @default(autoincrement())
+  region_id       Int
+  name            String         @db.VarChar(200)
+  description     String?        @db.Text
+  latitude        Decimal?       @db.Decimal(10, 7)
+  longitude       Decimal?       @db.Decimal(10, 7)
+  altitude        Int?
+  distance_km     Int?
+  travel_time     String?        @db.VarChar(50)
+  difficulty      Difficulty?
+  visit_price     Decimal?       @db.Decimal(10, 2)
+  best_season     BestSeason?
+  recommendations String?        @db.Text
+  is_popular      Boolean        @default(false)
+  status          LocationStatus @default(active)
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @updatedAt
+
+  // Relations
+  region        Region           @relation(fields: [region_id], references: [id])
+  photos        LocationPhoto[]
+  services      PartnerService[]
+  weather_cache WeatherCache[]
+
+  @@map("locations")
+}
+
+// ─────────────────────────────────────────────
+// LOCATION PHOTOS
+// ─────────────────────────────────────────────
+
+model LocationPhoto {
+  id          BigInt  @id @default(autoincrement())
+  location_id BigInt
+  image_url   String  @db.Text
+  is_main     Boolean @default(false)
+  sort_order  Int     @default(0)
+
+  // Relations
+  location Location @relation(fields: [location_id], references: [id], onDelete: Cascade)
+
+  @@map("location_photos")
+}
+
+// ─────────────────────────────────────────────
+// SERVICE CATEGORIES
+// ─────────────────────────────────────────────
+
+model ServiceCategory {
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(100)
+  icon       String?  @db.VarChar(255)
+  created_at DateTime @default(now())
+
+  // Relations
+  services PartnerService[]
+
+  @@map("service_categories")
+}
+
+// ─────────────────────────────────────────────
+// PARTNER SERVICES
+// ─────────────────────────────────────────────
+
+model PartnerService {
+  id            BigInt        @id @default(autoincrement())
+  partner_id    BigInt
+  location_id   BigInt
+  category_id   Int
+  title         String        @db.VarChar(200)
+  description   String?       @db.Text
+  price         Decimal?      @db.Decimal(10, 2)
+  currency      String?       @db.VarChar(10)
+  phone         String?       @db.VarChar(20)
+  whatsapp      String?       @db.VarChar(20)
+  telegram      String?       @db.VarChar(100)
+  status        ServiceStatus @default(pending)
+  reject_reason String?       @db.Text
+  created_at    DateTime      @default(now())
+  updated_at    DateTime      @updatedAt
+  approved_at   DateTime?
+
+  // Relations
+  partner            User                @relation(fields: [partner_id], references: [id])
+  location           Location            @relation(fields: [location_id], references: [id])
+  category           ServiceCategory     @relation(fields: [category_id], references: [id])
+  photos             ServicePhoto[]
+  moderation_history ModerationHistory[]
+
+  @@map("partner_services")
+}
+
+// ─────────────────────────────────────────────
+// SERVICE PHOTOS
+// ─────────────────────────────────────────────
+
+model ServicePhoto {
+  id         BigInt  @id @default(autoincrement())
+  service_id BigInt
+  image_url  String  @db.Text
+  is_main    Boolean @default(false)
+  sort_order Int     @default(0)
+
+  // Relations
+  service PartnerService @relation(fields: [service_id], references: [id], onDelete: Cascade)
+
+  @@map("service_photos")
+}
+
+// ─────────────────────────────────────────────
+// WEATHER CACHE
+// ─────────────────────────────────────────────
+
+model WeatherCache {
+  id                BigInt   @id @default(autoincrement())
+  location_id       BigInt
+  temperature       Decimal? @db.Decimal(4, 1)
+  weather_condition String?  @db.VarChar(100)
+  wind_speed        Decimal? @db.Decimal(4, 1)
+  fetched_at        DateTime @default(now())
+
+  // Relations
+  location Location @relation(fields: [location_id], references: [id], onDelete: Cascade)
+
+  @@map("weather_cache")
+}
+
+// ─────────────────────────────────────────────
+// MODERATION HISTORY
+// ─────────────────────────────────────────────
+
+model ModerationHistory {
+  id         BigInt           @id @default(autoincrement())
+  service_id BigInt
+  admin_id   BigInt
+  action     ModerationAction
+  comment    String?          @db.Text
+  created_at DateTime         @default(now())
+
+  // Relations
+  service PartnerService @relation(fields: [service_id], references: [id], onDelete: Cascade)
+  admin   User           @relation("AdminModerations", fields: [admin_id], references: [id])
+
+  @@map("moderation_history")
+}
