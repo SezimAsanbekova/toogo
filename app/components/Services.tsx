@@ -103,24 +103,26 @@ const services = [
 
 export default function Services() {
   return (
-    <section id="services" className="py-24 bg-stone-50">
+    <section id="services" className="py-24 transition-colors duration-300"
+      style={{ backgroundColor: "var(--bg-secondary)" }}>
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex flex-col md:flex-row gap-16 items-center">
-          {/* Left text */}
+          {/* Left */}
           <div className="md:w-2/5 shrink-0">
-            <span className="inline-block bg-[#3d5a3e]/10 text-[#3d5a3e] text-xs font-semibold uppercase tracking-widest px-3 py-1.5 rounded-full mb-3">
+            <span className="inline-block text-xs font-semibold uppercase tracking-widest px-3 py-1.5 rounded-full mb-3"
+              style={{ backgroundColor: "color-mix(in srgb, var(--accent) 12%, transparent)", color: "var(--accent-light)" }}>
               Услуги
             </span>
-            <h2 className="text-4xl font-bold text-stone-800 leading-tight mb-4">
+            <h2 className="text-4xl font-bold leading-tight mb-4" style={{ color: "var(--text-primary)" }}>
               Всё что нужно
-              <br />
-              для поездки
+              <br />для поездки
             </h2>
-            <p className="text-stone-500 leading-relaxed mb-8">
-              На каждой странице локации собраны предложения местных партнёров —
-              от трансфера до аренды снаряжения. Свяжись напрямую и договорись сам.
+            <p className="leading-relaxed mb-8" style={{ color: "var(--text-secondary)" }}>
+              На каждой странице локации — предложения местных партнёров.
+              От трансфера до аренды снаряжения. Свяжись напрямую.
             </p>
-            <button className="bg-[#3d5a3e] hover:bg-[#2d4330] text-white font-semibold px-7 py-3.5 rounded-full transition-all hover:shadow-lg">
+            <button className="font-semibold px-7 py-3.5 rounded-full transition-all text-white hover:opacity-90"
+              style={{ backgroundColor: "var(--accent)" }}>
               Найти локацию
             </button>
           </div>
@@ -130,14 +132,20 @@ export default function Services() {
             {services.map((s) => (
               <div
                 key={s.name}
-                className="group bg-white rounded-2xl p-4 flex flex-col gap-3 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer border border-transparent hover:border-[#3d5a3e]/20"
+                className="group rounded-2xl p-4 flex flex-col gap-3 cursor-pointer transition-all duration-200 hover:-translate-y-0.5"
+                style={{
+                  backgroundColor: "var(--bg-card)",
+                  border: "1px solid var(--border)",
+                  boxShadow: "var(--card-shadow)",
+                }}
               >
-                <div className="w-11 h-11 rounded-xl bg-[#3d5a3e]/8 flex items-center justify-center text-[#3d5a3e] group-hover:bg-[#3d5a3e] group-hover:text-white transition-all">
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center transition-all group-hover:scale-110"
+                  style={{ backgroundColor: "color-mix(in srgb, var(--accent) 12%, transparent)", color: "var(--accent-light)" }}>
                   {s.icon}
                 </div>
                 <div>
-                  <p className="font-semibold text-stone-800 text-sm">{s.name}</p>
-                  <p className="text-xs text-stone-400 leading-snug mt-0.5">{s.desc}</p>
+                  <p className="font-semibold text-sm" style={{ color: "var(--text-primary)" }}>{s.name}</p>
+                  <p className="text-xs leading-snug mt-0.5" style={{ color: "var(--text-muted)" }}>{s.desc}</p>
                 </div>
               </div>
             ))}

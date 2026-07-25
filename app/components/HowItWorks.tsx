@@ -7,7 +7,7 @@ const steps = [
       </svg>
     ),
     title: "Найди место",
-    description: "Введи название в поиск или используй фильтры — по сложности, расстоянию, сезону и стоимости.",
+    description: "Введи название или используй фильтры — по сложности, расстоянию, сезону и стоимости.",
   },
   {
     number: "02",
@@ -17,7 +17,7 @@ const steps = [
       </svg>
     ),
     title: "Изучи информацию",
-    description: "Фото, описание, карта, текущая погода, высота и рекомендации — всё в одном месте.",
+    description: "Фото, описание, карта, погода, высота и рекомендации — всё в одном месте.",
   },
   {
     number: "03",
@@ -37,43 +37,52 @@ const steps = [
       </svg>
     ),
     title: "Свяжись напрямую",
-    description: "Звонок, WhatsApp или Telegram — выбери удобный способ связи с партнёром без посредников.",
+    description: "Звонок, WhatsApp или Telegram — без посредников и комиссий.",
   },
 ];
 
 export default function HowItWorks() {
   return (
-    <section id="how-it-works" className="py-24 bg-white">
+    <section id="how-it-works" className="py-24 transition-colors duration-300"
+      style={{ backgroundColor: "var(--bg-secondary)" }}>
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-16">
-          <span className="inline-block bg-[#3d5a3e]/10 text-[#3d5a3e] text-xs font-semibold uppercase tracking-widest px-3 py-1.5 rounded-full mb-3">
+          <span className="inline-block text-xs font-semibold uppercase tracking-widest px-3 py-1.5 rounded-full mb-3"
+            style={{ backgroundColor: "color-mix(in srgb, var(--accent) 12%, transparent)", color: "var(--accent-light)" }}>
             Просто
           </span>
-          <h2 className="text-4xl font-bold text-stone-800">Как это работает</h2>
-          <p className="text-stone-500 mt-3 max-w-md mx-auto">
+          <h2 className="text-4xl font-bold leading-tight" style={{ color: "var(--text-primary)" }}>
+            Как это работает
+          </h2>
+          <p className="mt-3 max-w-md mx-auto" style={{ color: "var(--text-secondary)" }}>
             Четыре шага от идеи до поездки в горы
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {steps.map((step, i) => (
-            <div key={step.number} className="relative">
-              {/* Connector line */}
+            <div key={step.number} className="relative group">
+              {/* Connector */}
               {i < steps.length - 1 && (
-                <div className="hidden lg:block absolute top-10 left-[calc(100%-16px)] w-full h-px bg-stone-200 z-0" />
+                <div className="hidden lg:block absolute top-10 left-[calc(100%-16px)] w-full h-px z-0"
+                  style={{ backgroundColor: "var(--border)" }} />
               )}
 
               <div className="relative z-10">
-                {/* Icon circle */}
-                <div className="w-20 h-20 rounded-2xl bg-[#3d5a3e]/8 flex items-center justify-center text-[#3d5a3e] mb-5 group-hover:bg-[#3d5a3e] transition-colors">
+                <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-5 transition-all group-hover:scale-105"
+                  style={{ backgroundColor: "color-mix(in srgb, var(--accent) 10%, transparent)", color: "var(--accent-light)" }}>
                   {step.icon}
                 </div>
-
-                <span className="text-xs font-bold text-stone-300 tracking-widest uppercase mb-2 block">
+                <span className="text-xs font-bold tracking-widest uppercase mb-2 block"
+                  style={{ color: "var(--text-muted)" }}>
                   {step.number}
                 </span>
-                <h3 className="text-lg font-bold text-stone-800 mb-2">{step.title}</h3>
-                <p className="text-sm text-stone-500 leading-relaxed">{step.description}</p>
+                <h3 className="text-lg font-bold mb-2" style={{ color: "var(--text-primary)" }}>
+                  {step.title}
+                </h3>
+                <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                  {step.description}
+                </p>
               </div>
             </div>
           ))}

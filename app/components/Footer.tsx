@@ -1,41 +1,41 @@
 export default function Footer() {
   return (
-    <footer className="bg-stone-900 text-stone-400 py-16">
+    <footer className="py-16 transition-colors duration-300"
+      style={{ backgroundColor: "var(--bg-secondary)", borderTop: "1px solid var(--border)" }}>
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
           {/* Brand */}
           <div className="md:col-span-2">
-            <div className="text-2xl font-bold text-white mb-3">
-              Too<span className="text-[#7a9e5f]">Go</span>
+            <div className="text-2xl font-bold mb-3" style={{ color: "var(--text-primary)" }}>
+              Too<span style={{ color: "var(--accent-light)" }}>Go</span>
             </div>
-            <p className="text-sm leading-relaxed max-w-xs">
+            <p className="text-sm leading-relaxed max-w-xs" style={{ color: "var(--text-secondary)" }}>
               Сервис поиска горных мест Кыргызстана. Помогаем туристам находить
               лучшие локации и местных партнёров.
             </p>
           </div>
 
-          {/* Links */}
           <div>
-            <h4 className="text-white font-semibold text-sm mb-4">Сервис</h4>
-            <ul className="space-y-2.5 text-sm">
-              <li><a href="#" className="hover:text-white transition-colors">Все локации</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Поиск</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Фильтры</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Избранное</a></li>
+            <h4 className="font-semibold text-sm mb-4" style={{ color: "var(--text-primary)" }}>Сервис</h4>
+            <ul className="space-y-2.5 text-sm" style={{ color: "var(--text-secondary)" }}>
+              {["Все локации", "Поиск", "Фильтры", "Избранное"].map((item) => (
+                <li key={item}><a href="#" className="transition-colors hover:text-[var(--accent-light)]">{item}</a></li>
+              ))}
             </ul>
           </div>
 
           <div>
-            <h4 className="text-white font-semibold text-sm mb-4">Партнёрам</h4>
-            <ul className="space-y-2.5 text-sm">
-              <li><a href="/partner" className="hover:text-white transition-colors">Регистрация</a></li>
-              <li><a href="/partner" className="hover:text-white transition-colors">Мои объявления</a></li>
-              <li><a href="/admin" className="hover:text-white transition-colors">Администраторам</a></li>
+            <h4 className="font-semibold text-sm mb-4" style={{ color: "var(--text-primary)" }}>Партнёрам</h4>
+            <ul className="space-y-2.5 text-sm" style={{ color: "var(--text-secondary)" }}>
+              <li><a href="/partner" className="transition-colors hover:text-[var(--accent-light)]">Регистрация</a></li>
+              <li><a href="/partner" className="transition-colors hover:text-[var(--accent-light)]">Мои объявления</a></li>
+              <li><a href="/admin" className="transition-colors hover:text-[var(--accent-light)]">Администраторам</a></li>
             </ul>
           </div>
         </div>
 
-        <div className="border-t border-stone-800 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4"
+          style={{ borderTop: "1px solid var(--border)", color: "var(--text-muted)" }}>
           <p className="text-xs">© 2025 TooGo. Все права защищены.</p>
           <p className="text-xs">Кыргызская Республика</p>
         </div>
