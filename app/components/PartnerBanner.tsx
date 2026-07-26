@@ -1,11 +1,25 @@
+"use client";
+
+import { useT } from "../i18n/useT";
+
+type BannerT = {
+  partnerBanner: {
+    badge: string; title1: string; title2: string;
+    description: string; benefits: string[];
+    cta: string; ctaNote: string;
+  };
+};
+
 export default function PartnerBanner() {
+  const t = useT<BannerT>("landing");
+  const b = t.partnerBanner;
+
   return (
     <section className="py-24 transition-colors duration-300"
       style={{ backgroundColor: "var(--bg-primary)" }}>
       <div className="max-w-7xl mx-auto px-6">
         <div className="relative rounded-3xl overflow-hidden"
           style={{ backgroundColor: "var(--accent)" }}>
-          {/* Background image */}
           <div
             className="absolute inset-0 opacity-10 bg-cover bg-center"
             style={{ backgroundImage: "url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&q=80')" }}
@@ -15,18 +29,15 @@ export default function PartnerBanner() {
           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8 p-10 md:p-16">
             <div className="max-w-lg">
               <span className="inline-block bg-white/15 text-white/70 text-xs font-semibold uppercase tracking-widest px-3 py-1.5 rounded-full mb-4">
-                Для бизнеса
+                {b.badge}
               </span>
               <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight mb-4 uppercase">
-                Ты предприниматель
-                <br />в горном туризме?
+                {b.title1}
+                <br />{b.title2}
               </h2>
-              <p className="text-white/70 text-base leading-relaxed">
-                Размести услуги рядом с популярными локациями — получай клиентов
-                напрямую, без комиссий и посредников.
-              </p>
+              <p className="text-white/70 text-base leading-relaxed">{b.description}</p>
               <ul className="mt-6 space-y-2.5">
-                {["Бесплатная регистрация", "Туристы находят тебя сами", "Прямая связь — телефон, WhatsApp, Telegram"].map((item) => (
+                {b.benefits.map((item) => (
                   <li key={item} className="flex items-center gap-3 text-white/80 text-sm">
                     <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
                       style={{ backgroundColor: "rgba(168,201,127,0.25)" }}>
@@ -44,9 +55,9 @@ export default function PartnerBanner() {
               <a href="/partner"
                 className="font-bold px-8 py-4 rounded-2xl transition-all text-center shadow-lg hover:shadow-xl hover:opacity-95"
                 style={{ backgroundColor: "var(--bg-primary)", color: "var(--accent)" }}>
-                Стать партнёром
+                {b.cta}
               </a>
-              <p className="text-white/40 text-xs text-center">Регистрация занимает 5 минут</p>
+              <p className="text-white/40 text-xs text-center">{b.ctaNote}</p>
             </div>
           </div>
         </div>

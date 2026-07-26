@@ -1,0 +1,49 @@
+{
+  "logo": {
+    "country": "Kyrgyzstan"
+  },
+  "nav": {
+    "locations": "Locations",
+    "howItWorks": "How it works",
+    "services": "Services"
+  },
+  "header": {
+    "forPartners": "For Partners",
+    "login": "Sign In",
+    "menuAriaLabel": "Menu"
+  },
+  "footer": {
+    "description": "A mountain destination discovery service for Kyrgyzstan. Helping travellers find the best locations and local partners.",
+    "serviceTitle": "Service",
+    "partnersTitle": "For Partners",
+    "serviceLinks": {
+      "allLocations": "All Locations",
+      "search": "Search",
+      "filters": "Filters",
+      "favorites": "Favorites"
+    },
+    "partnerLinks": {
+      "register": "Register",
+      "myListings": "My Listings",
+      "forAdmins": "For Admins"
+    },
+    "copyright": "© 2025 TooGo. All rights reserved.",
+    "country": "Kyrgyz Republic"
+  },
+  "difficulty": {
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard"
+  },
+  "season": {
+    "spring": "Spring",
+    "summer": "Summer",
+    "autumn": "Autumn",
+    "winter": "Winter",
+    "all_year": "Year-round"
+  },
+  "theme": {
+    "light": "Light theme",
+    "dark": "Dark theme"
+  }
+}

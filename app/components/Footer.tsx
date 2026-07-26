@@ -1,4 +1,21 @@
+"use client";
+
+import { useT } from "../i18n/useT";
+
+type FooterT = {
+  footer: {
+    description: string;
+    serviceTitle: string; partnersTitle: string;
+    serviceLinks: { allLocations: string; search: string; filters: string; favorites: string };
+    partnerLinks: { register: string; myListings: string; forAdmins: string };
+    copyright: string; country: string;
+  };
+};
+
 export default function Footer() {
+  const t = useT<FooterT>("common");
+  const f = t.footer;
+
   return (
     <footer className="py-16 transition-colors duration-300"
       style={{ backgroundColor: "var(--bg-secondary)", borderTop: "1px solid var(--border)" }}>
@@ -10,34 +27,46 @@ export default function Footer() {
               Too<span style={{ color: "var(--accent-light)" }}>Go</span>
             </div>
             <p className="text-sm leading-relaxed max-w-xs" style={{ color: "var(--text-secondary)" }}>
-              Сервис поиска горных мест Кыргызстана. Помогаем туристам находить
-              лучшие локации и местных партнёров.
+              {f.description}
             </p>
           </div>
 
           <div>
-            <h4 className="font-semibold text-sm mb-4" style={{ color: "var(--text-primary)" }}>Сервис</h4>
+            <h4 className="font-semibold text-sm mb-4" style={{ color: "var(--text-primary)" }}>
+              {f.serviceTitle}
+            </h4>
             <ul className="space-y-2.5 text-sm" style={{ color: "var(--text-secondary)" }}>
-              {["Все локации", "Поиск", "Фильтры", "Избранное"].map((item) => (
-                <li key={item}><a href="#" className="transition-colors hover:text-[var(--accent-light)]">{item}</a></li>
+              {[
+                { label: f.serviceLinks.allLocations, href: "/locations" },
+                { label: f.serviceLinks.search,       href: "/locations" },
+                { label: f.serviceLinks.filters,      href: "/locations" },
+                { label: f.serviceLinks.favorites,    href: "#" },
+              ].map((item) => (
+                <li key={item.label}>
+                  <a href={item.href} className="transition-colors hover:text-[var(--accent-light)]">
+                    {item.label}
+                  </a>
+                </li>
               ))}
             </ul>
           </div>
 
           <div>
-            <h4 className="font-semibold text-sm mb-4" style={{ color: "var(--text-primary)" }}>Партнёрам</h4>
+            <h4 className="font-semibold text-sm mb-4" style={{ color: "var(--text-primary)" }}>
+              {f.partnersTitle}
+            </h4>
             <ul className="space-y-2.5 text-sm" style={{ color: "var(--text-secondary)" }}>
-              <li><a href="/partner" className="transition-colors hover:text-[var(--accent-light)]">Регистрация</a></li>
-              <li><a href="/partner" className="transition-colors hover:text-[var(--accent-light)]">Мои объявления</a></li>
-              <li><a href="/admin" className="transition-colors hover:text-[var(--accent-light)]">Администраторам</a></li>
+              <li><a href="/partner" className="transition-colors hover:text-[var(--accent-light)]">{f.partnerLinks.register}</a></li>
+              <li><a href="/partner" className="transition-colors hover:text-[var(--accent-light)]">{f.partnerLinks.myListings}</a></li>
+              <li><a href="/admin"   className="transition-colors hover:text-[var(--accent-light)]">{f.partnerLinks.forAdmins}</a></li>
             </ul>
           </div>
         </div>
 
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4"
           style={{ borderTop: "1px solid var(--border)", color: "var(--text-muted)" }}>
-          <p className="text-xs">© 2025 TooGo. Все права защищены.</p>
-          <p className="text-xs">Кыргызская Республика</p>
+          <p className="text-xs">{f.copyright}</p>
+          <p className="text-xs">{f.country}</p>
         </div>
       </div>
     </footer>

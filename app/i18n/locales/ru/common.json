@@ -1,0 +1,49 @@
+{
+  "logo": {
+    "country": "Кыргызстан"
+  },
+  "nav": {
+    "locations": "Локации",
+    "howItWorks": "Как это работает",
+    "services": "Услуги"
+  },
+  "header": {
+    "forPartners": "Партнёрам",
+    "login": "Войти",
+    "menuAriaLabel": "Меню"
+  },
+  "footer": {
+    "description": "Сервис поиска горных мест Кыргызстана. Помогаем туристам находить лучшие локации и местных партнёров.",
+    "serviceTitle": "Сервис",
+    "partnersTitle": "Партнёрам",
+    "serviceLinks": {
+      "allLocations": "Все локации",
+      "search": "Поиск",
+      "filters": "Фильтры",
+      "favorites": "Избранное"
+    },
+    "partnerLinks": {
+      "register": "Регистрация",
+      "myListings": "Мои объявления",
+      "forAdmins": "Администраторам"
+    },
+    "copyright": "© 2025 TooGo. Все права защищены.",
+    "country": "Кыргызская Республика"
+  },
+  "difficulty": {
+    "easy": "Лёгкий",
+    "medium": "Средний",
+    "hard": "Сложный"
+  },
+  "season": {
+    "spring": "Весна",
+    "summer": "Лето",
+    "autumn": "Осень",
+    "winter": "Зима",
+    "all_year": "Круглый год"
+  },
+  "theme": {
+    "light": "Светлая тема",
+    "dark": "Тёмная тема"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "catalog": {
+    "breadcrumbHome": "Главная",
+    "breadcrumbCurrent": "Локации",
+    "title": "Все локации",
+    "subtitle": "горных мест Кыргызстана",
+    "searchPlaceholder": "Поиск по названию или области...",
+    "filterAll": "Все",
+    "distanceLabel": "До",
+    "distanceSuffix": "км",
+    "resultsFound": "Найдено:",
+    "resultsLocations": "локаций",
+    "popular": "Популярное",
+    "details": "Подробнее →",
+    "empty": {
+      "title": "Ничего не найдено",
+      "hint": "Попробуйте изменить фильтры"
+    }
+  },
+  "detail": {
+    "backButton": "Все локации",
+    "popular": "Популярное",
+    "aboutTitle": "О локации",
+    "recommendationsTitle": "Рекомендации",
+    "mapTitle": "Карта",
+    "mapRouteLink": "Построить маршрут в Google Maps",
+    "servicesNearby": "Услуги рядом",
+    "infoTitle": "Информация",
+    "infoDistance": "Расстояние",
+    "infoTravelTime": "Время в пути",
+    "infoAltitude": "Высота",
+    "infoSeason": "Сезон",
+    "infoPrice": "Стоимость",
+    "infoFree": "Бесплатно",
+    "infoPriceSuffix": "сом",
+    "infoAltitudeSuffix": "м",
+    "infoDistanceSuffix": "км",
+    "infoDifficulty": "Сложность",
+    "weatherTitle": "Погода сейчас",
+    "weatherCondition": "Переменная облачность",
+    "weatherWind": "Ветер:",
+    "weatherWindSuffix": "м/с",
+    "tagsTitle": "Теги",
+    "services": [
+      "Трансфер",
+      "Гостевой дом",
+      "Глэмпинг",
+      "Юрта",
+      "Гид",
+      "Конные прогулки",
+      "Кафе",
+      "Аренда снаряжения"
+    ]
+  }
+}

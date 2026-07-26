@@ -1,0 +1,72 @@
+{
+  "1": {
+    "name": "Issyk-Kul Lake",
+    "region": "Issyk-Kul Region",
+    "description": "Issyk-Kul is the second largest alpine lake in the world and one of the deepest. Surrounded by the Tian Shan mountain ranges, it never freezes even in winter. Crystal clear water, sandy beaches and stunning views attract thousands of tourists every year.",
+    "recommendations": "Best time for swimming is July and August. Bring sunscreen — the sun is stronger at altitude. Evenings can be cool, bring a jacket.",
+    "tags": ["Lake", "Beach", "Family", "Swimming"]
+  },
+  "2": {
+    "name": "Ala-Kul Pass",
+    "region": "Issyk-Kul Region",
+    "description": "Ala-Kul is a high-altitude lake with turquoise water at 3532 m. One of the most scenic trekking routes in Kyrgyzstan. The path passes through alpine meadows and glaciers.",
+    "recommendations": "Route for experienced hikers only. Acclimatisation is required. Bring warm clothes and a raincoat — weather changes quickly. A guide is recommended.",
+    "tags": ["Trekking", "Alpine", "Lake", "Glacier"]
+  },
+  "3": {
+    "name": "Jeti-Oguz Valley",
+    "region": "Issyk-Kul Region",
+    "description": "A valley with unique red rocks resembling seven bulls. Here you will find the famous 'Broken Heart' rock. Scenic meadows, mountain rivers and fresh air make this an ideal retreat.",
+    "recommendations": "Great place for horse riding. Locals offer tours to the rocks. You can camp in the valley.",
+    "tags": ["Canyon", "Horse Riding", "Rocks", "Camping"]
+  },
+  "4": {
+    "name": "Ala-Archa Gorge",
+    "region": "Chui Region",
+    "description": "A national nature park 40 km from Bishkek. Mountain rivers, pine forests, alpine meadows and snowy peaks. A popular destination for day hikes and mountaineering.",
+    "recommendations": "Accessible year-round. Snowmobiles and skiing possible in winter. Park entry is paid. Good trails for family walks.",
+    "tags": ["Nature Park", "Trekking", "Mountaineering", "Day Trip"]
+  },
+  "5": {
+    "name": "Son-Kul Lake",
+    "region": "Naryn Region",
+    "description": "A high-altitude steppe lake at 3016 m — the true heart of nomadic culture. In summer the shores are dotted with shepherds' yurts. Here you can feel the spirit of Kyrgyz traditions and spend the night in a yurt.",
+    "recommendations": "Stay overnight in a yurt with local shepherds — an unforgettable experience. Bring warm clothing — temperatures drop below zero at night. Road is partly unpaved.",
+    "tags": ["Lake", "Yurt", "Nomads", "Alpine"]
+  },
+  "6": {
+    "name": "Fairy Tale Canyon",
+    "region": "Issyk-Kul Region",
+    "description": "Whimsical red and orange rocks resembling castles and towers. Called 'Fairy Tale' for the fantastic shapes created by wind erosion. One of the most photogenic sites in Kyrgyzstan.",
+    "recommendations": "Best photos at sunrise and sunset when the rocks glow orange. Comfortable footwear is essential. Can be combined with a visit to Issyk-Kul.",
+    "tags": ["Canyon", "Photography", "Rocks", "Day Trip"]
+  },
+  "7": {
+    "name": "Chon-Kemin Gorge",
+    "region": "Chui Region",
+    "description": "A scenic valley of the Chon-Kemin River with Tian Shan firs, alpine meadows and snowy peaks. An excellent place for horse trekking and eco-tourism. Traditional way of life and guest yurts are preserved here.",
+    "recommendations": "Ideal in spring when the meadows bloom. You can rent a horse from locals. Several guesthouses available for overnight stays.",
+    "tags": ["Valley", "Eco-tourism", "Horse Riding", "Yurt"]
+  },
+  "8": {
+    "name": "Tosor Pass",
+    "region": "Issyk-Kul Region",
+    "description": "A high-altitude pass at 3893 m connecting the Issyk-Kul valley with the Naryn steppes. Stunning panoramic views from both sides. One of the most beautiful passes in Kyrgyzstan.",
+    "recommendations": "Passable only in summer (June–September). 4WD required. Bring extra fuel and food. Weather is unpredictable.",
+    "tags": ["Pass", "4WD", "Panorama", "Extreme"]
+  },
+  "9": {
+    "name": "Khan Tengri Peak",
+    "region": "Issyk-Kul Region",
+    "description": "The legendary 7010 m peak — 'Lord of the Sky' on the border of Kyrgyzstan, Kazakhstan and China. One of the most beautiful peaks in the world with a marble pyramidal summit. A dream for every mountaineer.",
+    "recommendations": "Ascent for professional mountaineers with high-altitude expedition experience only. Registration with emergency services and insurance mandatory. Base camp accessible by helicopter.",
+    "tags": ["Mountaineering", "High Altitude", "Extreme", "7000m"]
+  },
+  "10": {
+    "name": "Suusamyr Valley",
+    "region": "Jalal-Abad Region",
+    "description": "A wide high-altitude valley at 2200 m surrounded by snow-capped ranges. In summer it turns into a green carpet with grazing horse herds and sheep flocks. A classic picture of Kyrgyz nomadic life.",
+    "recommendations": "Perfect for photography and nature watching. On the way you can stop at yurts and try kumys. The road is paved.",
+    "tags": ["Valley", "Nomads", "Horses", "Photography"]
+  }
+}

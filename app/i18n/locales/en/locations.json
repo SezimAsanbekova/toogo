@@ -1,0 +1,55 @@
+{
+  "catalog": {
+    "breadcrumbHome": "Home",
+    "breadcrumbCurrent": "Locations",
+    "title": "All locations",
+    "subtitle": "mountain places in Kyrgyzstan",
+    "searchPlaceholder": "Search by name or region...",
+    "filterAll": "All",
+    "distanceLabel": "Up to",
+    "distanceSuffix": "km",
+    "resultsFound": "Found:",
+    "resultsLocations": "locations",
+    "popular": "Popular",
+    "details": "Details →",
+    "empty": {
+      "title": "Nothing found",
+      "hint": "Try changing the filters"
+    }
+  },
+  "detail": {
+    "backButton": "All locations",
+    "popular": "Popular",
+    "aboutTitle": "About",
+    "recommendationsTitle": "Tips",
+    "mapTitle": "Map",
+    "mapRouteLink": "Get directions in Google Maps",
+    "servicesNearby": "Nearby services",
+    "infoTitle": "Information",
+    "infoDistance": "Distance",
+    "infoTravelTime": "Travel time",
+    "infoAltitude": "Altitude",
+    "infoSeason": "Best season",
+    "infoPrice": "Entry fee",
+    "infoFree": "Free",
+    "infoPriceSuffix": "KGS",
+    "infoAltitudeSuffix": "m",
+    "infoDistanceSuffix": "km",
+    "infoDifficulty": "Difficulty",
+    "weatherTitle": "Current weather",
+    "weatherCondition": "Partly cloudy",
+    "weatherWind": "Wind:",
+    "weatherWindSuffix": "m/s",
+    "tagsTitle": "Tags",
+    "services": [
+      "Transfer",
+      "Guest house",
+      "Glamping",
+      "Yurt",
+      "Guide",
+      "Horse riding",
+      "Café",
+      "Gear rental"
+    ]
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "logo": {
+    "country": "Кыргызстан"
+  },
+  "nav": {
+    "locations": "Жерлер",
+    "howItWorks": "Кантип иштейт",
+    "services": "Кызматтар"
+  },
+  "header": {
+    "forPartners": "Өнөктөштөргө",
+    "login": "Кирүү",
+    "menuAriaLabel": "Меню"
+  },
+  "footer": {
+    "description": "Кыргызстандын тоо жерлерин издөө кызматы. Туристтерге мыкты жерлерди жана жергиликтүү өнөктөштөрдү табууга жардам беребиз.",
+    "serviceTitle": "Кызмат",
+    "partnersTitle": "Өнөктөштөргө",
+    "serviceLinks": {
+      "allLocations": "Бардык жерлер",
+      "search": "Издөө",
+      "filters": "Чыпкалар",
+      "favorites": "Тандалмалар"
+    },
+    "partnerLinks": {
+      "register": "Катталуу",
+      "myListings": "Менин жарнамаларым",
+      "forAdmins": "Администраторлорго"
+    },
+    "copyright": "© 2025 TooGo. Бардык укуктар корголгон.",
+    "country": "Кыргыз Республикасы"
+  },
+  "difficulty": {
+    "easy": "Жеңил",
+    "medium": "Орточо",
+    "hard": "Кыйын"
+  },
+  "season": {
+    "spring": "Жаз",
+    "summer": "Жай",
+    "autumn": "Күз",
+    "winter": "Кыш",
+    "all_year": "Бүткүл жыл"
+  },
+  "theme": {
+    "light": "Жарык тема",
+    "dark": "Күңүрт тема"
+  }
+}

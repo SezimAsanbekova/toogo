@@ -1,0 +1,84 @@
+{
+  "hero": {
+    "badge": "Mountain routes of Kyrgyzstan",
+    "title1": "Find your",
+    "title2": "mountain",
+    "title3": "place",
+    "subtitle": "Hundreds of routes, locations and services in one place. From quiet lakes to high-altitude passes.",
+    "searchPlaceholder": "Search location...",
+    "searchButton": "Search",
+    "randomPick": "Can't choose — pick for me",
+    "scrollHint": "Scroll down",
+    "searchEmpty": "Nothing found",
+    "searchCount": "of",
+    "searchCountSuffix": "locations",
+    "stats": {
+      "locations": "Locations",
+      "regions": "Regions",
+      "partners": "Partners",
+      "tourists": "Tourists"
+    }
+  },
+  "howItWorks": {
+    "badge": "Simple",
+    "title": "How it works",
+    "subtitle": "Four steps from idea to your mountain trip",
+    "steps": [
+      {
+        "title": "Find a place",
+        "description": "Enter a name or use filters — by difficulty, distance, season and price."
+      },
+      {
+        "title": "Explore info",
+        "description": "Photos, description, map, weather, altitude and tips — all in one place."
+      },
+      {
+        "title": "Find partners",
+        "description": "Transfer, accommodation, guides, horse rides — local businesses near every location."
+      },
+      {
+        "title": "Contact directly",
+        "description": "Phone, WhatsApp or Telegram — no middlemen, no commissions."
+      }
+    ]
+  },
+  "popularLocations": {
+    "badge": "Popular",
+    "title": "Popular locations",
+    "subtitle": "The most visited places",
+    "allLocations": "All locations",
+    "details": "Details"
+  },
+  "services": {
+    "badge": "Services",
+    "title1": "Everything you need",
+    "title2": "for your trip",
+    "description": "On every location page — offers from local partners. From transfer to gear rental. Contact them directly.",
+    "cta": "Find a location",
+    "items": [
+      { "name": "Transfer", "desc": "Transfer to any location" },
+      { "name": "Guest house", "desc": "Cosy accommodation with locals" },
+      { "name": "A-frame cabin", "desc": "Triangle cabins in the mountains" },
+      { "name": "Glamping", "desc": "Comfort in the middle of nature" },
+      { "name": "Yurt", "desc": "Traditional Kyrgyz dwelling" },
+      { "name": "Guide", "desc": "Experienced local guides" },
+      { "name": "Horse riding", "desc": "Horseback routes" },
+      { "name": "Gear rental", "desc": "Tents, trekking poles and more" },
+      { "name": "Café", "desc": "Local food near the mountains" },
+      { "name": "Other", "desc": "Unique partner offers" }
+    ]
+  },
+  "partnerBanner": {
+    "badge": "For business",
+    "title1": "Are you an entrepreneur",
+    "title2": "in mountain tourism?",
+    "description": "List your services near popular locations — get clients directly, no commissions or middlemen.",
+    "benefits": [
+      "Free registration",
+      "Tourists find you themselves",
+      "Direct contact — phone, WhatsApp, Telegram"
+    ],
+    "cta": "Become a partner",
+    "ctaNote": "Registration takes 5 minutes"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "catalog": {
+    "breadcrumbHome": "Башкы бет",
+    "breadcrumbCurrent": "Жерлер",
+    "title": "Бардык жерлер",
+    "subtitle": "Кыргызстандын тоо жерлери",
+    "searchPlaceholder": "Аталышы же облусу боюнча издөө...",
+    "filterAll": "Баары",
+    "distanceLabel": "Чейин",
+    "distanceSuffix": "км",
+    "resultsFound": "Табылды:",
+    "resultsLocations": "жер",
+    "popular": "Популярдуу",
+    "details": "Толугураак →",
+    "empty": {
+      "title": "Эч нерсе табылган жок",
+      "hint": "Чыпкаларды өзгөртүп көрүңүз"
+    }
+  },
+  "detail": {
+    "backButton": "Бардык жерлер",
+    "popular": "Популярдуу",
+    "aboutTitle": "Жер жөнүндө",
+    "recommendationsTitle": "Сунуштар",
+    "mapTitle": "Карта",
+    "mapRouteLink": "Google Maps'та маршрут түз",
+    "servicesNearby": "Жакын кызматтар",
+    "infoTitle": "Маалымат",
+    "infoDistance": "Аралык",
+    "infoTravelTime": "Жол убактысы",
+    "infoAltitude": "Бийиктик",
+    "infoSeason": "Мезгил",
+    "infoPrice": "Наркы",
+    "infoFree": "Акысыз",
+    "infoPriceSuffix": "сом",
+    "infoAltitudeSuffix": "м",
+    "infoDistanceSuffix": "км",
+    "infoDifficulty": "Татаалдыгы",
+    "weatherTitle": "Азыркы аба ырайы",
+    "weatherCondition": "Жарым-жартылай булуттуу",
+    "weatherWind": "Шамал:",
+    "weatherWindSuffix": "м/с",
+    "tagsTitle": "Тэгдер",
+    "services": [
+      "Трансфер",
+      "Конок үй",
+      "Глэмпинг",
+      "Боз үй",
+      "Гид",
+      "Ат жорго",
+      "Кафе",
+      "Жабдык ижарасы"
+    ]
+  }
+}
