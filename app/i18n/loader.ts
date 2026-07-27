@@ -15,12 +15,16 @@ import kgLanding from "./locales/kg/landing.json";
 import kgLocations from "./locales/kg/locations.json";
 import kgLocationsData from "./locales/kg/locationsData.json";
 
-type Namespace = "common" | "landing" | "locations" | "locationsData";
+import ruAdminData from "./locales/ru/admin.json";
+import enAdminData from "./locales/en/admin.json";
+import kgAdminData from "./locales/kg/admin.json";
+
+type Namespace = "common" | "landing" | "locations" | "locationsData" | "admin";
 
 const translations: Record<Locale, Record<Namespace, object>> = {
-  ru: { common: ruCommon, landing: ruLanding, locations: ruLocations, locationsData: ruLocationsData },
-  en: { common: enCommon, landing: enLanding, locations: enLocations, locationsData: enLocationsData },
-  kg: { common: kgCommon, landing: kgLanding, locations: kgLocations, locationsData: kgLocationsData },
+  ru: { common: ruCommon, landing: ruLanding, locations: ruLocations, locationsData: ruLocationsData, admin: ruAdminData },
+  en: { common: enCommon, landing: enLanding, locations: enLocations, locationsData: enLocationsData, admin: enAdminData },
+  kg: { common: kgCommon, landing: kgLanding, locations: kgLocations, locationsData: kgLocationsData, admin: kgAdminData },
 };
 
 export function getTranslations<T = Record<string, unknown>>(

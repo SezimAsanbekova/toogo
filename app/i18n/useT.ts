@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { useLocale } from "./context";
 import { getTranslations } from "./loader";
 
-type Namespace = "common" | "landing" | "locations" | "locationsData";
+type Namespace = "common" | "landing" | "locations" | "locationsData" | "admin";
 
 export function useT<T = Record<string, unknown>>(namespace: Namespace): T {
   const { locale } = useLocale();

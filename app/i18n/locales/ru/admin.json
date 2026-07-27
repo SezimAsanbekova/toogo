@@ -1,0 +1,33 @@
+{
+  "login": {
+    "title": "Вход для администратора",
+    "subtitle": "Введите учётные данные для входа",
+    "emailLabel": "Электронная почта",
+    "emailPlaceholder": "admin@toogo.kg",
+    "passwordLabel": "Пароль",
+    "passwordPlaceholder": "••••••••",
+    "submitButton": "Войти",
+    "loading": "Проверка...",
+    "errorInvalid": "Неверный email или пароль",
+    "errorBlocked": "Учётная запись заблокирована",
+    "errorServer": "Ошибка сервера. Попробуйте позже"
+  },
+  "otp": {
+    "title": "Подтверждение через Telegram",
+    "subtitle": "Мы отправили 6-значный код в Telegram",
+    "codeLabel": "Код подтверждения",
+    "codePlaceholder": "000000",
+    "submitButton": "Подтвердить",
+    "loading": "Проверка кода...",
+    "resend": "Отправить код повторно",
+    "errorInvalid": "Неверный или истёкший код",
+    "errorExpired": "Код истёк. Запросите новый",
+    "errorServer": "Ошибка сервера. Попробуйте позже",
+    "hint": "Код действителен 10 минут"
+  },
+  "dashboard": {
+    "title": "Панель администратора",
+    "welcome": "Добро пожаловать",
+    "logout": "Выйти"
+  }
+}

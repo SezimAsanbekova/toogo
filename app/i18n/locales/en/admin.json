@@ -1,0 +1,33 @@
+{
+  "login": {
+    "title": "Admin Sign In",
+    "subtitle": "Enter your credentials to continue",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "admin@toogo.kg",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "••••••••",
+    "submitButton": "Sign In",
+    "loading": "Verifying...",
+    "errorInvalid": "Invalid email or password",
+    "errorBlocked": "This account has been blocked",
+    "errorServer": "Server error. Please try again later"
+  },
+  "otp": {
+    "title": "Telegram Verification",
+    "subtitle": "We sent a 6-digit code to your Telegram",
+    "codeLabel": "Verification code",
+    "codePlaceholder": "000000",
+    "submitButton": "Verify",
+    "loading": "Checking code...",
+    "resend": "Resend code",
+    "errorInvalid": "Invalid or expired code",
+    "errorExpired": "Code expired. Please request a new one",
+    "errorServer": "Server error. Please try again later",
+    "hint": "Code is valid for 10 minutes"
+  },
+  "dashboard": {
+    "title": "Admin Dashboard",
+    "welcome": "Welcome",
+    "logout": "Sign Out"
+  }
+}

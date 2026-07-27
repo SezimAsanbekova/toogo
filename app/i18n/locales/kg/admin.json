@@ -1,0 +1,33 @@
+{
+  "login": {
+    "title": "Администратор кирүүсү",
+    "subtitle": "Уланта берүү үчүн маалыматтарыңызды киргизиңиз",
+    "emailLabel": "Электрондук почта",
+    "emailPlaceholder": "admin@toogo.kg",
+    "passwordLabel": "Сырсөз",
+    "passwordPlaceholder": "••••••••",
+    "submitButton": "Кирүү",
+    "loading": "Текшерүү...",
+    "errorInvalid": "Email же сырсөз туура эмес",
+    "errorBlocked": "Аккаунт бөгөттөлгөн",
+    "errorServer": "Сервер катасы. Кийинчерээк аракет кылыңыз"
+  },
+  "otp": {
+    "title": "Telegram аркылуу ырастоо",
+    "subtitle": "Telegramга 6 орундуу код жөнөттүк",
+    "codeLabel": "Ырастоо коду",
+    "codePlaceholder": "000000",
+    "submitButton": "Ырастоо",
+    "loading": "Код текшерилүүдө...",
+    "resend": "Кодду кайра жөнөтүү",
+    "errorInvalid": "Код туура эмес же мөөнөтү өткөн",
+    "errorExpired": "Кодун мөөнөтү өттү. Жаңысын сураңыз",
+    "errorServer": "Сервер катасы. Кийинчерээк аракет кылыңыз",
+    "hint": "Код 10 мүнөт жарактуу"
+  },
+  "dashboard": {
+    "title": "Администратор панели",
+    "welcome": "Кош келиңиз",
+    "logout": "Чыгуу"
+  }
+}
