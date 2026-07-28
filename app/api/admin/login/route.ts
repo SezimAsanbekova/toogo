@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/app/lib/prisma";
+import otpStore from "@/app/lib/otpStore";
 
 // In-memory OTP store (production: use Redis)
 // Map<userId, { code, expiresAt }>
@@ -73,6 +74,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "SERVER_ERROR" }, { status: 500 });
   }
 }
-
-// Export store for OTP verification route
-export { otpStore };
