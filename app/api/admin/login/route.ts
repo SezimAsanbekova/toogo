@@ -3,10 +3,6 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/app/lib/prisma";
 import otpStore from "@/app/lib/otpStore";
 
-// In-memory OTP store (production: use Redis)
-// Map<userId, { code, expiresAt }>
-const otpStore = new Map<string, { code: string; expiresAt: number }>();
-
 export async function POST(req: NextRequest) {
   try {
     const { email, password } = await req.json();
