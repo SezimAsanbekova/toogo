@@ -76,8 +76,6 @@ export default function AdminLoginPage() {
             style={{ background: "rgba(10, 20, 10, 0.75)", backdropFilter: "blur(24px)" }}>
 
             {/* Top accent line */}
-            <div className="h-1 w-full" style={{ background: "linear-gradient(90deg, #22c55e, #4ade80, #22c55e)" }} />
-
             <div className="p-8">
               {/* Icon */}
               <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
