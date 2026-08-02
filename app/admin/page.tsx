@@ -40,7 +40,7 @@ export default function AdminLoginPage() {
         return;
       }
       sessionStorage.setItem("admin_pending_id", data.userId);
-      router.push("/admin/otp");
+      window.location.href = "/admin/otp";
     } catch {
       setError(t.errorServer);
     } finally {

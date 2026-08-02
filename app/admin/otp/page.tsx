@@ -22,11 +22,24 @@ export default function AdminOtpPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [cooldown, setCooldown] = useState(0);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
   const refs = useRef<(HTMLInputElement | null)[]>([]);
 
+  // Check sessionStorage only on client after hydration
   useEffect(() => {
-    refs.current[0]?.focus();
+    const id = sessionStorage.getItem("admin_pending_id");
+    if (!id) {
+      window.location.href = "/admin";
+      return;
+    }
+    setUserId(id);
+    setReady(true);
   }, []);
+
+  useEffect(() => {
+    if (ready) refs.current[0]?.focus();
+  }, [ready]);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -57,9 +70,7 @@ export default function AdminOtpPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const fullCode = code.join("");
-    if (fullCode.length !== 6) return;
-    const userId = sessionStorage.getItem("admin_pending_id");
-    if (!userId) { router.push("/admin"); return; }
+    if (fullCode.length !== 6 || !userId) return;
 
     setError("");
     setLoading(true);
@@ -67,6 +78,7 @@ export default function AdminOtpPage() {
       const res = await fetch("/api/admin/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ userId, code: fullCode }),
       });
       const data = await res.json();
@@ -78,7 +90,8 @@ export default function AdminOtpPage() {
         return;
       }
       sessionStorage.removeItem("admin_pending_id");
-      router.push("/admin/dashboard");
+      await new Promise((r) => setTimeout(r, 200));
+      window.location.replace("/admin/dashboard");
     } catch {
       setError(t.errorServer);
     } finally {
@@ -87,6 +100,16 @@ export default function AdminOtpPage() {
   };
 
   const codeComplete = code.every(Boolean);
+
+  // Don't render until we've checked sessionStorage on client
+  if (!ready) {
+    return (
+      <div className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: "#0a140a" }}>
+        <div className="w-8 h-8 border-2 border-[#22c55e] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen flex flex-col overflow-hidden">
