@@ -2,476 +2,1230 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useT } from "../../i18n/useT";
-import ThemeToggle from "../../components/ThemeToggle";
 
-// ── Types ──────────────────────────────────────────────────────────────────
-type Category = { id: number; name: string; icon: string | null; count: number };
-type Service  = {
-  id: string; title: string; status: string;
-  price: number | null; currency: string | null;
-  category: string; location: string; partner: string; createdAt: string;
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface Stats {
+  locations: number;
+  partners: number;
+  activeServices: number;
+  pendingServices: number;
+}
+
+interface Props {
+  email: string;
+  stats: Stats;
+}
+
+interface Location {
+  id: string; name: string; region: string; status: string;
+  difficulty: string | null; altitude: number | null;
+  is_popular: boolean; services_count: number; created_at: string;
+}
+
+interface Partner {
+  id: string; full_name: string; email: string; phone: string | null;
+  telegram: string | null; status: string; services_count: number;
+  created_at: string; last_login: string | null;
+}
+
+interface Listing {
+  id: string; title: string; description: string | null; status: string;
+  price: number | null; currency: string | null; category: string;
+  location: string; partner: string; partner_email: string;
+  reject_reason: string | null; created_at: string;
+}
+
+interface Service {
+  id: string; title: string; status: string; price: number | null;
+  currency: string | null; category: string; location: string;
+  partner: string; createdAt: string;
+}
+
+// ── Sidebar nav ───────────────────────────────────────────────────────────────
+
+const NAV = [
+  { key: "dashboard", label: "Dashboard", icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> },
+  { key: "locations", label: "Горные локации", icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M12 2C8.686 2 6 4.686 6 8c0 5 6 13 6 13s6-8 6-13c0-3.314-2.686-6-6-6z"/><circle cx="12" cy="8" r="2"/></svg> },
+  { key: "services", label: "Услуги", icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg> },
+  { key: "partners", label: "Партнеры", icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg> },
+  { key: "listings", label: "Объявления", icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8"/></svg> },
+  { key: "complaints", label: "Жалобы", icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg> },
+  { key: "stats", label: "Статистика", icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg> },
+  { key: "settings", label: "Настройки", icon: <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg> },
+];
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+const STATUS_LABELS: Record<string, string> = {
+  active: "Активен", blocked: "Заблокирован",
+  pending: "На модерации", approved: "Одобрен",
+  rejected: "Отклонён", deleted: "Удалён",
+  hidden: "Скрыт",
 };
 
-// ── Icons ──────────────────────────────────────────────────────────────────
-const Icons = {
-  dashboard: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>,
-  locations: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
-  partners: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
-  listings: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>,
-  complaints: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>,
-  stats: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>,
-  services: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>,
-  settings: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
-  logout: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>,
-  menu: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16"/></svg>,
-  close: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>,
-  bell: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>,
-  trending: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>,
-  check: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>,
-  clock: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>,
-};
+function Badge({ status }: { status: string }) {
+  const colors: Record<string, { bg: string; color: string }> = {
+    active:   { bg: "#0a0a0a", color: "#e0e0e0" },
+    approved: { bg: "#0a0a0a", color: "#e0e0e0" },
+    pending:  { bg: "#1a1500", color: "#a0850a" },
+    rejected: { bg: "#1a0808", color: "#a03030" },
+    deleted:  { bg: "#111", color: "#555" },
+    blocked:  { bg: "#1a0808", color: "#a03030" },
+    hidden:   { bg: "#111", color: "#555" },
+  };
+  const c = colors[status] ?? { bg: "#111", color: "#888" };
+  return (
+    <span className="text-[11px] font-medium px-2 py-0.5 rounded" style={{ background: c.bg, color: c.color, border: "1px solid #222" }}>
+      {STATUS_LABELS[status] ?? status}
+    </span>
+  );
+}
 
-// ── Nav items ──────────────────────────────────────────────────────────────
-const NAV_ITEMS = [
-  { id: "dashboard",   label: "Dashboard",         icon: Icons.dashboard },
-  { id: "locations",   label: "Горные локации",     icon: Icons.locations },
-  { id: "partners",    label: "Партнёры",           icon: Icons.partners },
-  { id: "listings",    label: "Объявления",         icon: Icons.listings },
-  { id: "services",    label: "Услуги",             icon: Icons.services },
-  { id: "complaints",  label: "Жалобы",             icon: Icons.complaints },
-  { id: "stats",       label: "Статистика",         icon: Icons.stats },
-  { id: "settings",    label: "Настройки",          icon: Icons.settings },
-];
+function SectionHeader({ title, sub }: { title: string; sub?: string }) {
+  return (
+    <div className="mb-6">
+      <h2 className="text-lg font-semibold tracking-tight" style={{ color: "#fff" }}>{title}</h2>
+      {sub && <p className="mt-0.5 text-sm" style={{ color: "#444" }}>{sub}</p>}
+    </div>
+  );
+}
 
-// ── Stat cards ─────────────────────────────────────────────────────────────
-const STATS = [
-  { label: "Всего локаций",    value: "10",  change: "+2",  positive: true,  color: "#22c55e", bg: "rgba(34,197,94,0.1)"  },
-  { label: "Партнёры",         value: "0",   change: "0",   positive: true,  color: "#3b82f6", bg: "rgba(59,130,246,0.1)" },
-  { label: "Объявления",       value: "0",   change: "0",   positive: true,  color: "#a855f7", bg: "rgba(168,85,247,0.1)" },
-  { label: "На модерации",     value: "0",   change: "0",   positive: false, color: "#f59e0b", bg: "rgba(245,158,11,0.1)" },
-];
+function SearchBar({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
+  return (
+    <div className="relative mb-5">
+      <svg className="absolute left-3 top-1/2 -translate-y-1/2" width="14" height="14" fill="none" stroke="#444" strokeWidth="1.6" strokeLinecap="round" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+      </svg>
+      <input
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full pl-9 pr-4 py-2.5 rounded-lg text-[13px] outline-none transition-colors"
+        style={{ background: "#0a0a0a", border: "1px solid #1c1c1c", color: "#e0e0e0" }}
+        onFocus={e => (e.target.style.borderColor = "#333")}
+        onBlur={e => (e.target.style.borderColor = "#1c1c1c")}
+      />
+    </div>
+  );
+}
 
-// ── Recent activity (mock) ─────────────────────────────────────────────────
-const ACTIVITY = [
-  { type: "approved", text: "Объявление «Юрта у Иссык-Куля» одобрено",      time: "2 мин назад",  color: "#22c55e" },
-  { type: "pending",  text: "Новое объявление от партнёра ожидает проверки", time: "15 мин назад", color: "#f59e0b" },
-  { type: "approved", text: "Добавлена локация «Каньон Сказка»",             time: "1 час назад",  color: "#3b82f6" },
-  { type: "pending",  text: "Регистрация нового партнёра",                   time: "3 часа назад", color: "#a855f7" },
-];
+function TableWrap({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #1c1c1c" }}>
+      <table className="w-full text-[13px]" style={{ borderCollapse: "collapse" }}>
+        {children}
+      </table>
+    </div>
+  );
+}
 
-// ──────────────────────────────────────────────────────────────────────────
-export default function AdminDashboardClient({ email }: { email: string }) {
-  const router = useRouter();
-  const [active, setActive] = useState("dashboard");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+function Th({ children }: { children: React.ReactNode }) {
+  return (
+    <th className="text-left px-4 py-3 text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#333", background: "#0a0a0a", borderBottom: "1px solid #1c1c1c" }}>
+      {children}
+    </th>
+  );
+}
 
-  // Services state
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [services, setServices]     = useState<Service[]>([]);
-  const [svcSearch, setSvcSearch]   = useState("");
-  const [svcStatus, setSvcStatus]   = useState("all");
-  const [svcLoading, setSvcLoading] = useState(false);
+function Td({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <td className={"px-4 py-3 " + (className ?? "")} style={{ color: "#aaa", borderBottom: "1px solid #111" }}>
+      {children}
+    </td>
+  );
+}
 
-  const fetchServices = useCallback(async (q: string, st: string) => {
-    setSvcLoading(true);
-    try {
-      const res = await fetch(`/api/admin/services?q=${encodeURIComponent(q)}&status=${st}`);
-      if (res.ok) {
-        const data = await res.json();
-        setCategories(data.categories);
-        setServices(data.services);
-      }
-    } finally {
-      setSvcLoading(false);
-    }
-  }, []);
+function Empty() {
+  return <p className="text-center py-16 text-sm" style={{ color: "#333" }}>Нет данных</p>;
+}
 
-  useEffect(() => {
-    if (active === "services") fetchServices(svcSearch, svcStatus);
-  }, [active, svcSearch, svcStatus, fetchServices]);
+function Loader() {
+  return (
+    <div className="flex items-center justify-center py-16">
+      <svg className="animate-spin" width="20" height="20" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-20" cx="12" cy="12" r="10" stroke="#fff" strokeWidth="3"/>
+        <path className="opacity-70" fill="#fff" d="M4 12a8 8 0 018-8v8z"/>
+      </svg>
+    </div>
+  );
+}
 
-  const handleLogout = async () => {
-    await fetch("/api/admin/logout", { method: "POST" });
-    router.push("/admin");
-    router.refresh();
+function FilterBtn({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="px-3 py-1.5 rounded-md text-[12px] font-medium transition-colors"
+      style={{ background: active ? "#fff" : "#0a0a0a", color: active ? "#000" : "#555", border: "1px solid " + (active ? "#fff" : "#1c1c1c") }}
+    >
+      {label}
+    </button>
+  );
+}
+
+// ── Section: Locations ────────────────────────────────────────────────────────
+
+interface LocationPhoto {
+  id: string;
+  image_url: string;
+  is_main: boolean;
+  sort_order: number;
+}
+
+// ── Photo manager (shown after location is created) ───────────────────────────
+
+function PhotoManager({ locationId }: { locationId: string }) {
+  const [photos, setPhotos] = useState<LocationPhoto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [urlInput, setUrlInput] = useState("");
+  const [urlMode, setUrlMode] = useState(false);
+  const [err, setErr] = useState("");
+  const fileRef = useState<HTMLInputElement | null>(null);
+
+  const load = useCallback(async () => {
+    const res = await fetch(`/api/admin/location-photos?location_id=${locationId}`);
+    setPhotos(await res.json());
+    setLoading(false);
+  }, [locationId]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  const uploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true); setErr("");
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("location_id", locationId);
+    fd.append("is_main", photos.length === 0 ? "true" : "false");
+    const res = await fetch("/api/admin/location-photos", { method: "POST", body: fd });
+    if (!res.ok) setErr("Ошибка загрузки");
+    else await load();
+    setUploading(false);
+    e.target.value = "";
   };
 
-  const initials = email.slice(0, 2).toUpperCase();
+  const addUrl = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!urlInput.trim()) return;
+    setUploading(true); setErr("");
+    const res = await fetch("/api/admin/location-photos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ location_id: locationId, image_url: urlInput.trim(), is_main: photos.length === 0 }),
+    });
+    if (!res.ok) setErr("Ошибка сохранения");
+    else { setUrlInput(""); await load(); }
+    setUploading(false);
+  };
+
+  const setMain = async (id: string) => {
+    await fetch("/api/admin/location-photos", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, location_id: locationId }),
+    });
+    await load();
+  };
+
+  const remove = async (id: string) => {
+    await fetch("/api/admin/location-photos", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    await load();
+  };
 
   return (
-    <div className="flex h-screen overflow-hidden transition-colors duration-300"
-      style={{ backgroundColor: "var(--bg-primary)" }}>
-
-      {/* ── Mobile overlay ── */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/50 z-20 lg:hidden"
-          onClick={() => setSidebarOpen(false)} />
-      )}
-
-      {/* ── Sidebar ── */}
-      <aside
-        className={`fixed lg:static inset-y-0 left-0 z-30 flex flex-col w-64 transition-transform duration-300
-          ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
-        style={{ backgroundColor: "var(--bg-secondary)", borderRight: "1px solid var(--border)" }}
-      >
-        {/* Logo */}
-        <div className="flex items-center justify-between px-5 h-16 shrink-0"
-          style={{ borderBottom: "1px solid var(--border)" }}>
-          <span className="text-xl font-bold" style={{ color: "var(--accent)" }}>
-            Too<span style={{ color: "var(--accent-light)" }}>Go</span>
-            <span className="ml-1.5 text-xs font-normal uppercase tracking-widest"
-              style={{ color: "var(--text-muted)" }}>Admin</span>
-          </span>
-          <button className="lg:hidden" onClick={() => setSidebarOpen(false)}
-            style={{ color: "var(--text-muted)" }}>
-            {Icons.close}
+    <div className="mt-5 pt-5" style={{ borderTop: "1px solid #1c1c1c" }}>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: "#333" }}>
+          Фотографии локации
+        </p>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setUrlMode(false)}
+            className="text-[11px] px-2.5 py-1 rounded transition-colors"
+            style={{ background: !urlMode ? "#fff" : "#111", color: !urlMode ? "#000" : "#555", border: "1px solid " + (!urlMode ? "#fff" : "#222") }}
+          >
+            Загрузить файл
+          </button>
+          <button
+            type="button"
+            onClick={() => setUrlMode(true)}
+            className="text-[11px] px-2.5 py-1 rounded transition-colors"
+            style={{ background: urlMode ? "#fff" : "#111", color: urlMode ? "#000" : "#555", border: "1px solid " + (urlMode ? "#fff" : "#222") }}
+          >
+            По URL
           </button>
         </div>
+      </div>
 
-        {/* Nav */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-          {NAV_ITEMS.map((item) => {
-            const isActive = active === item.id;
+      {/* Upload area */}
+      {!urlMode ? (
+        <label
+          className="flex flex-col items-center justify-center gap-2 rounded-xl cursor-pointer transition-colors"
+          style={{ background: "#060606", border: "1px dashed #222", padding: "24px", minHeight: "80px" }}
+          onDragOver={e => e.preventDefault()}
+        >
+          {uploading ? (
+            <svg className="animate-spin" width="20" height="20" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-20" cx="12" cy="12" r="10" stroke="#fff" strokeWidth="3"/>
+              <path className="opacity-70" fill="#fff" d="M4 12a8 8 0 018-8v8z"/>
+            </svg>
+          ) : (
+            <>
+              <svg width="20" height="20" fill="none" stroke="#333" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+              </svg>
+              <span className="text-[12px]" style={{ color: "#444" }}>Нажмите или перетащите файл</span>
+              <span className="text-[11px]" style={{ color: "#2a2a2a" }}>JPG, PNG, WebP до 10 МБ</span>
+            </>
+          )}
+          <input
+            ref={el => { fileRef[1](el); }}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={uploadFile}
+            disabled={uploading}
+          />
+        </label>
+      ) : (
+        <form onSubmit={addUrl} className="flex gap-2">
+          <input
+            value={urlInput}
+            onChange={e => setUrlInput(e.target.value)}
+            placeholder="https://example.com/photo.jpg"
+            className="flex-1 px-3 py-2 rounded-lg text-[13px] outline-none"
+            style={{ background: "#0a0a0a", border: "1px solid #1c1c1c", color: "#e0e0e0" }}
+            onFocus={e => (e.target.style.borderColor = "#333")}
+            onBlur={e => (e.target.style.borderColor = "#1c1c1c")}
+          />
+          <button
+            type="submit"
+            disabled={uploading}
+            className="px-4 py-2 rounded-lg text-[13px] font-semibold disabled:opacity-50"
+            style={{ background: "#fff", color: "#000" }}
+          >
+            {uploading ? "…" : "Добавить"}
+          </button>
+        </form>
+      )}
+
+      {err && <p className="text-[12px] mt-2" style={{ color: "#a05050" }}>{err}</p>}
+
+      {/* Photo grid */}
+      {!loading && photos.length > 0 && (
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-4">
+          {photos.map(p => (
+            <div key={p.id} className="relative group rounded-lg overflow-hidden" style={{ aspectRatio: "4/3", background: "#111" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={p.image_url}
+                alt=""
+                className="w-full h-full object-cover"
+                onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
+              />
+              {p.is_main && (
+                <span className="absolute top-1.5 left-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ background: "#fff", color: "#000" }}>
+                  Главное
+                </span>
+              )}
+              <div className="absolute inset-0 flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: "rgba(0,0,0,0.7)" }}>
+                {!p.is_main && (
+                  <button
+                    type="button"
+                    onClick={() => setMain(p.id)}
+                    title="Сделать главным"
+                    className="text-[10px] px-2 py-1 rounded font-medium"
+                    style={{ background: "#fff", color: "#000" }}
+                  >
+                    Главное
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => remove(p.id)}
+                  title="Удалить"
+                  className="text-[10px] px-2 py-1 rounded font-medium"
+                  style={{ background: "#1a0808", color: "#bf6f6f", border: "1px solid #3a1a1a" }}
+                >
+                  Удалить
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!loading && photos.length === 0 && (
+        <p className="text-[12px] mt-3" style={{ color: "#2a2a2a" }}>Фото ещё не добавлены</p>
+      )}
+    </div>
+  );
+}
+
+interface Region { id: number; name: string; }
+
+const EMPTY_LOC = { name: "", region_id: "", description: "", altitude: "", distance_km: "", travel_time: "", difficulty: "", visit_price: "", best_season: "", recommendations: "", is_popular: false, status: "active" };
+
+function SectionLocations() {
+  const [data, setData] = useState<Location[]>([]);
+  const [regions, setRegions] = useState<Region[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState("");
+  const [status, setStatus] = useState("all");
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState(EMPTY_LOC);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
+  const [createdId, setCreatedId] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const [locRes, regRes] = await Promise.all([
+      fetch(`/api/admin/locations?q=${encodeURIComponent(q)}&status=${status}`),
+      fetch("/api/admin/locations?type=regions"),
+    ]);
+    setData(await locRes.json());
+    setRegions(await regRes.json());
+    setLoading(false);
+  }, [q, status]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name || !form.region_id) { setErr("Заполните название и регион"); return; }
+    setSaving(true); setErr("");
+    const res = await fetch("/api/admin/locations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+    if (!res.ok) { setErr("Ошибка сохранения"); setSaving(false); return; }
+    const created = await res.json();
+    setForm(EMPTY_LOC);
+    setCreatedId(created.id);
+    await load();
+    setSaving(false);
+  };
+
+  const DIFF: Record<string, string> = { easy: "Лёгкий", medium: "Средний", hard: "Сложный" };
+
+  const inputCls = "w-full px-3 py-2 rounded-lg text-[13px] outline-none transition-colors";
+  const inputStyle = { background: "#0a0a0a", border: "1px solid #1c1c1c", color: "#e0e0e0" };
+  const F = (k: keyof typeof form) => ({
+    value: form[k] as string,
+    onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+      setForm(f => ({ ...f, [k]: e.target.value })),
+    className: inputCls,
+    style: inputStyle,
+    onFocus: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => (e.target.style.borderColor = "#333"),
+    onBlur:  (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => (e.target.style.borderColor = "#1c1c1c"),
+  });
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight" style={{ color: "#fff" }}>Горные локации</h2>
+          <p className="mt-0.5 text-sm" style={{ color: "#444" }}>Все горные места Кыргызстана</p>
+        </div>
+        <button onClick={() => { setShowForm(!showForm); setErr(""); }}
+          className="px-4 py-2 rounded-lg text-[13px] font-semibold transition-colors"
+          style={{ background: showForm ? "#111" : "#fff", color: showForm ? "#555" : "#000", border: "1px solid " + (showForm ? "#222" : "#fff") }}>
+          {showForm ? "Отмена" : "+ Добавить"}
+        </button>
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleSubmit} className="rounded-xl p-6 mb-6 space-y-4" style={{ background: "#0a0a0a", border: "1px solid #1c1c1c" }}>
+          <p className="text-[12px] font-semibold uppercase tracking-widest mb-2" style={{ color: "#333" }}>Новая локация</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[11px] uppercase tracking-wider mb-1.5" style={{ color: "#444" }}>Название *</label>
+              <input {...F("name")} placeholder="Ала-Арча" />
+            </div>
+            <div>
+              <label className="block text-[11px] uppercase tracking-wider mb-1.5" style={{ color: "#444" }}>Регион *</label>
+              <select {...F("region_id")} className={inputCls} style={inputStyle}>
+                <option value="">Выберите регион</option>
+                {regions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[11px] uppercase tracking-wider mb-1.5" style={{ color: "#444" }}>Высота (м)</label>
+              <input {...F("altitude")} type="number" placeholder="3500" />
+            </div>
+            <div>
+              <label className="block text-[11px] uppercase tracking-wider mb-1.5" style={{ color: "#444" }}>Расстояние (км)</label>
+              <input {...F("distance_km")} type="number" placeholder="40" />
+            </div>
+            <div>
+              <label className="block text-[11px] uppercase tracking-wider mb-1.5" style={{ color: "#444" }}>Время в пути</label>
+              <input {...F("travel_time")} placeholder="1.5 часа" />
+            </div>
+            <div>
+              <label className="block text-[11px] uppercase tracking-wider mb-1.5" style={{ color: "#444" }}>Сложность</label>
+              <select {...F("difficulty")} className={inputCls} style={inputStyle}>
+                <option value="">Не указана</option>
+                <option value="easy">Лёгкий</option>
+                <option value="medium">Средний</option>
+                <option value="hard">Сложный</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[11px] uppercase tracking-wider mb-1.5" style={{ color: "#444" }}>Цена посещения</label>
+              <input {...F("visit_price")} type="number" placeholder="500" />
+            </div>
+            <div>
+              <label className="block text-[11px] uppercase tracking-wider mb-1.5" style={{ color: "#444" }}>Лучший сезон</label>
+              <select {...F("best_season")} className={inputCls} style={inputStyle}>
+                <option value="">Не указан</option>
+                <option value="spring">Весна</option>
+                <option value="summer">Лето</option>
+                <option value="autumn">Осень</option>
+                <option value="winter">Зима</option>
+                <option value="all_year">Круглый год</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-[11px] uppercase tracking-wider mb-1.5" style={{ color: "#444" }}>Описание</label>
+            <textarea {...F("description")} rows={3} placeholder="Описание локации…" className={inputCls} style={inputStyle} />
+          </div>
+          <div>
+            <label className="block text-[11px] uppercase tracking-wider mb-1.5" style={{ color: "#444" }}>Рекомендации</label>
+            <textarea {...F("recommendations")} rows={2} placeholder="Что взять с собой…" className={inputCls} style={inputStyle} />
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={form.is_popular} onChange={e => setForm(f => ({ ...f, is_popular: e.target.checked }))}
+                className="w-4 h-4 rounded" style={{ accentColor: "#fff" }} />
+              <span className="text-[13px]" style={{ color: "#888" }}>Популярное место</span>
+            </label>
+          </div>
+          {err && <p className="text-[12px]" style={{ color: "#a05050" }}>{err}</p>}
+          {!createdId ? (
+            <button type="submit" disabled={saving}
+              className="px-5 py-2.5 rounded-lg text-[13px] font-semibold disabled:opacity-50"
+              style={{ background: "#fff", color: "#000" }}>
+              {saving ? "Сохранение…" : "Добавить локацию"}
+            </button>
+          ) : (
+            <div className="rounded-lg px-4 py-3 flex items-center gap-2" style={{ background: "#0a1a0a", border: "1px solid #1a3a1a" }}>
+              <svg width="14" height="14" fill="none" stroke="#6fbf6f" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+              <span className="text-[13px]" style={{ color: "#6fbf6f" }}>Локация создана. Добавьте фотографии ниже.</span>
+            </div>
+          )}
+          {createdId && <PhotoManager locationId={createdId} />}
+          {createdId && (
+            <button type="button" onClick={() => { setCreatedId(null); setShowForm(false); }}
+              className="mt-3 px-4 py-2 rounded-lg text-[13px] font-medium"
+              style={{ background: "#111", color: "#555", border: "1px solid #222" }}>
+              Готово
+            </button>
+          )}
+        </form>
+      )}
+
+      <SearchBar value={q} onChange={setQ} placeholder="Поиск по названию…" />
+      <div className="flex gap-2 mb-5">
+        {["all","active","hidden"].map(s => (
+          <FilterBtn key={s} label={s === "all" ? "Все" : s === "active" ? "Активные" : "Скрытые"} active={status === s} onClick={() => setStatus(s)} />
+        ))}
+      </div>
+      {loading ? <Loader /> : data.length === 0 ? <Empty /> : (
+        <TableWrap>
+          <thead><tr><Th>Название</Th><Th>Регион</Th><Th>Высота</Th><Th>Сложность</Th><Th>Услуг</Th><Th>Статус</Th></tr></thead>
+          <tbody>
+            {data.map(l => (
+              <tr key={l.id}>
+                <Td><span style={{ color: "#e0e0e0", fontWeight: 500 }}>{l.name}</span>{l.is_popular && <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded" style={{ background: "#111", color: "#666" }}>Popular</span>}</Td>
+                <Td>{l.region}</Td>
+                <Td>{l.altitude ? `${l.altitude} м` : "—"}</Td>
+                <Td>{l.difficulty ? DIFF[l.difficulty] ?? l.difficulty : "—"}</Td>
+                <Td>{l.services_count}</Td>
+                <Td><Badge status={l.status} /></Td>
+              </tr>
+            ))}
+          </tbody>
+        </TableWrap>
+      )}
+    </div>
+  );
+}
+
+// ── Section: Services ─────────────────────────────────────────────────────────
+
+const EMPTY_SVC = { title: "", description: "", partner_id: "", location_id: "", category_id: "", price: "", currency: "KGS", phone: "", whatsapp: "", telegram: "" };
+
+function SectionServices() {
+  const [data, setData] = useState<{ categories: { id: number; name: string; count: number }[]; services: Service[] }>({ categories: [], services: [] });
+  const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState("");
+  const [status, setStatus] = useState("all");
+  const [showCatForm, setShowCatForm] = useState(false);
+  const [catName, setCatName] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const res = await fetch(`/api/admin/services?q=${encodeURIComponent(q)}&status=${status}`);
+    setData(await res.json());
+    setLoading(false);
+  }, [q, status]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  const inputCls = "w-full px-3 py-2 rounded-lg text-[13px] outline-none transition-colors";
+  const inputStyle = { background: "#0a0a0a", border: "1px solid #1c1c1c", color: "#e0e0e0" };
+  const onFocus = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => (e.target.style.borderColor = "#333");
+  const onBlur  = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => (e.target.style.borderColor = "#1c1c1c");
+
+  const handleAddCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!catName) { setErr("Введите название категории"); return; }
+    setSaving(true); setErr("");
+    await fetch("/api/admin/services", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "category", name: catName }),
+    });
+    setCatName(""); setShowCatForm(false);
+    await load(); setSaving(false);
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight" style={{ color: "#fff" }}>Услуги</h2>
+          <p className="mt-0.5 text-sm" style={{ color: "#444" }}>Категории и список всех услуг партнёров</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={() => { setShowCatForm(!showCatForm); setErr(""); }}
+            className="px-4 py-2 rounded-lg text-[13px] font-semibold transition-colors"
+            style={{ background: showCatForm ? "#111" : "#fff", color: showCatForm ? "#555" : "#000", border: "1px solid " + (showCatForm ? "#222" : "#fff") }}>
+            {showCatForm ? "Отмена" : "+ Категория"}
+          </button>
+        </div>
+      </div>
+
+      {showCatForm && (
+        <form onSubmit={handleAddCategory} className="rounded-xl p-5 mb-5 flex gap-3 items-end" style={{ background: "#0a0a0a", border: "1px solid #1c1c1c" }}>
+          <div className="flex-1">
+            <label className="block text-[11px] uppercase tracking-wider mb-1.5" style={{ color: "#444" }}>Название категории *</label>
+            <input value={catName} onChange={e => setCatName(e.target.value)} placeholder="Гиды, Трансфер…"
+              className={inputCls} style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
+          </div>
+          <button type="submit" disabled={saving}
+            className="px-4 py-2 rounded-lg text-[13px] font-semibold disabled:opacity-50"
+            style={{ background: "#fff", color: "#000" }}>
+            {saving ? "…" : "Добавить"}
+          </button>
+        </form>
+      )}
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+        {data.categories.map(c => (
+          <div key={c.id} className="rounded-xl p-4" style={{ background: "#0a0a0a", border: "1px solid #1c1c1c" }}>
+            <p className="text-2xl font-bold" style={{ color: "#fff" }}>{c.count}</p>
+            <p className="text-[12px] mt-1" style={{ color: "#444" }}>{c.name}</p>
+          </div>
+        ))}
+      </div>
+      <SearchBar value={q} onChange={setQ} placeholder="Поиск по услугам…" />
+      <div className="flex gap-2 mb-5">
+        {["all","pending","approved","rejected"].map(s => (
+          <FilterBtn key={s} label={s === "all" ? "Все" : STATUS_LABELS[s]} active={status === s} onClick={() => setStatus(s)} />
+        ))}
+      </div>
+      {loading ? <Loader /> : data.services.length === 0 ? <Empty /> : (
+        <TableWrap>
+          <thead><tr><Th>Название</Th><Th>Категория</Th><Th>Локация</Th><Th>Партнёр</Th><Th>Цена</Th><Th>Статус</Th></tr></thead>
+          <tbody>
+            {data.services.map(s => (
+              <tr key={s.id}>
+                <Td><span style={{ color: "#e0e0e0", fontWeight: 500 }}>{s.title}</span></Td>
+                <Td>{s.category}</Td>
+                <Td>{s.location}</Td>
+                <Td>{s.partner}</Td>
+                <Td>{s.price ? `${s.price} ${s.currency ?? ""}` : "—"}</Td>
+                <Td><Badge status={s.status} /></Td>
+              </tr>
+            ))}
+          </tbody>
+        </TableWrap>
+      )}
+    </div>
+  );
+}
+
+// ── Section: Partners ─────────────────────────────────────────────────────────
+
+const EMPTY_PARTNER = { full_name: "", email: "", password: "", phone: "", whatsapp: "", telegram: "" };
+
+function SectionPartners() {
+  const [data, setData] = useState<Partner[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState("");
+  const [status, setStatus] = useState("all");
+  const [toggling, setToggling] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState(EMPTY_PARTNER);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const res = await fetch(`/api/admin/partners?q=${encodeURIComponent(q)}&status=${status}`);
+    setData(await res.json());
+    setLoading(false);
+  }, [q, status]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  const toggle = async (id: string, current: string) => {
+    setToggling(id);
+    await fetch("/api/admin/partners", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status: current === "active" ? "blocked" : "active" }),
+    });
+    await load();
+    setToggling(null);
+  };
+
+  const inputCls = "w-full px-3 py-2 rounded-lg text-[13px] outline-none transition-colors";
+  const inputStyle = { background: "#0a0a0a", border: "1px solid #1c1c1c", color: "#e0e0e0" };
+  const onFocus = (e: React.FocusEvent<HTMLInputElement>) => (e.target.style.borderColor = "#333");
+  const onBlur  = (e: React.FocusEvent<HTMLInputElement>) => (e.target.style.borderColor = "#1c1c1c");
+  const F = (k: keyof typeof form, type = "text", placeholder = "") => ({
+    type,
+    placeholder,
+    value: form[k],
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => setForm(f => ({ ...f, [k]: e.target.value })),
+    className: inputCls,
+    style: inputStyle,
+    onFocus,
+    onBlur,
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.full_name || !form.email || !form.password) { setErr("Заполните имя, email и пароль"); return; }
+    setSaving(true); setErr("");
+    const res = await fetch("/api/admin/partners", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+    if (res.status === 409) { setErr("Пользователь с таким email уже существует"); setSaving(false); return; }
+    if (!res.ok) { setErr("Ошибка сохранения"); setSaving(false); return; }
+    setForm(EMPTY_PARTNER); setShowForm(false);
+    await load(); setSaving(false);
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight" style={{ color: "#fff" }}>Партнеры</h2>
+          <p className="mt-0.5 text-sm" style={{ color: "#444" }}>Все зарегистрированные партнёры</p>
+        </div>
+        <button
+          onClick={() => { setShowForm(!showForm); setErr(""); }}
+          className="px-4 py-2 rounded-lg text-[13px] font-semibold transition-colors"
+          style={{ background: showForm ? "#111" : "#fff", color: showForm ? "#555" : "#000", border: "1px solid " + (showForm ? "#222" : "#fff") }}
+        >
+          {showForm ? "Отмена" : "+ Добавить"}
+        </button>
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleSubmit} className="rounded-xl p-6 mb-6 space-y-4" style={{ background: "#0a0a0a", border: "1px solid #1c1c1c" }}>
+          <p className="text-[12px] font-semibold uppercase tracking-widest mb-2" style={{ color: "#333" }}>Новый партнёр</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[11px] uppercase tracking-wider mb-1.5" style={{ color: "#444" }}>Полное имя *</label>
+              <input {...F("full_name", "text", "Иван Иванов")} />
+            </div>
+            <div>
+              <label className="block text-[11px] uppercase tracking-wider mb-1.5" style={{ color: "#444" }}>Email *</label>
+              <input {...F("email", "email", "partner@example.com")} />
+            </div>
+            <div>
+              <label className="block text-[11px] uppercase tracking-wider mb-1.5" style={{ color: "#444" }}>Пароль *</label>
+              <input {...F("password", "password", "Минимум 8 символов")} />
+            </div>
+            <div>
+              <label className="block text-[11px] uppercase tracking-wider mb-1.5" style={{ color: "#444" }}>Телефон</label>
+              <input {...F("phone", "tel", "+996 700 000000")} />
+            </div>
+            <div>
+              <label className="block text-[11px] uppercase tracking-wider mb-1.5" style={{ color: "#444" }}>WhatsApp</label>
+              <input {...F("whatsapp", "tel", "+996 700 000000")} />
+            </div>
+            <div>
+              <label className="block text-[11px] uppercase tracking-wider mb-1.5" style={{ color: "#444" }}>Telegram</label>
+              <input {...F("telegram", "text", "@username")} />
+            </div>
+          </div>
+          {err && <p className="text-[12px]" style={{ color: "#a05050" }}>{err}</p>}
+          <button type="submit" disabled={saving}
+            className="px-5 py-2.5 rounded-lg text-[13px] font-semibold disabled:opacity-50"
+            style={{ background: "#fff", color: "#000" }}>
+            {saving ? "Сохранение…" : "Добавить партнёра"}
+          </button>
+        </form>
+      )}
+
+      <SearchBar value={q} onChange={setQ} placeholder="Поиск по имени или email…" />
+      <div className="flex gap-2 mb-5">
+        {["all","active","blocked"].map(s => (
+          <FilterBtn key={s} label={s === "all" ? "Все" : STATUS_LABELS[s]} active={status === s} onClick={() => setStatus(s)} />
+        ))}
+      </div>
+      {loading ? <Loader /> : data.length === 0 ? <Empty /> : (
+        <TableWrap>
+          <thead><tr><Th>Имя</Th><Th>Email</Th><Th>Telegram</Th><Th>Услуг</Th><Th>Статус</Th><Th>Действие</Th></tr></thead>
+          <tbody>
+            {data.map(p => (
+              <tr key={p.id}>
+                <Td><span style={{ color: "#e0e0e0", fontWeight: 500 }}>{p.full_name}</span></Td>
+                <Td>{p.email}</Td>
+                <Td>{p.telegram ?? "—"}</Td>
+                <Td>{p.services_count}</Td>
+                <Td><Badge status={p.status} /></Td>
+                <Td>
+                  <button
+                    disabled={toggling === p.id}
+                    onClick={() => toggle(p.id, p.status)}
+                    className="text-[12px] px-3 py-1 rounded transition-colors disabled:opacity-40"
+                    style={{ background: "#111", color: p.status === "active" ? "#888" : "#e0e0e0", border: "1px solid #222" }}
+                  >
+                    {toggling === p.id ? "…" : p.status === "active" ? "Заблокировать" : "Разблокировать"}
+                  </button>
+                </Td>
+              </tr>
+            ))}
+          </tbody>
+        </TableWrap>
+      )}
+    </div>
+  );
+}
+
+// ── Section: Listings (moderation) ───────────────────────────────────────────
+
+function SectionListings() {
+  const [data, setData] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState("");
+  const [status, setStatus] = useState("pending");
+  const [acting, setActing] = useState<string | null>(null);
+  const [rejectId, setRejectId] = useState<string | null>(null);
+  const [rejectComment, setRejectComment] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const res = await fetch(`/api/admin/listings?q=${encodeURIComponent(q)}&status=${status}`);
+    const json = await res.json();
+    setData(json);
+    setLoading(false);
+  }, [q, status]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  const act = async (id: string, action: string, comment?: string) => {
+    setActing(id);
+    await fetch("/api/admin/listings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, action, comment }),
+    });
+    setRejectId(null);
+    setRejectComment("");
+    await load();
+    setActing(null);
+  };
+
+  return (
+    <div>
+      <SectionHeader title="Объявления" sub="Модерация заявок партнёров" />
+      <SearchBar value={q} onChange={setQ} placeholder="Поиск по объявлениям…" />
+      <div className="flex gap-2 mb-5">
+        {["pending","approved","rejected","all"].map(s => (
+          <FilterBtn key={s} label={s === "all" ? "Все" : STATUS_LABELS[s]} active={status === s} onClick={() => setStatus(s)} />
+        ))}
+      </div>
+      {loading ? <Loader /> : data.length === 0 ? <Empty /> : (
+        <div className="space-y-3">
+          {data.map(item => (
+            <div key={item.id} className="rounded-xl p-5" style={{ background: "#0a0a0a", border: "1px solid #1c1c1c" }}>
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[14px] font-semibold" style={{ color: "#fff" }}>{item.title}</span>
+                    <Badge status={item.status} />
+                  </div>
+                  <p className="text-[12px] mb-2" style={{ color: "#444" }}>
+                    {item.category} · {item.location} · {item.partner}
+                    {item.price ? ` · ${item.price} ${item.currency ?? ""}` : ""}
+                  </p>
+                  {item.description && (
+                    <p className="text-[12px] line-clamp-2" style={{ color: "#555" }}>{item.description}</p>
+                  )}
+                  {item.reject_reason && (
+                    <p className="text-[12px] mt-2 px-3 py-2 rounded" style={{ background: "#110a0a", color: "#888", border: "1px solid #1a0808" }}>
+                      Причина отказа: {item.reject_reason}
+                    </p>
+                  )}
+                </div>
+                {item.status === "pending" && (
+                  <div className="flex gap-2 shrink-0">
+                    <button
+                      disabled={acting === item.id}
+                      onClick={() => act(item.id, "approve")}
+                      className="px-3 py-1.5 rounded text-[12px] font-medium transition-colors disabled:opacity-40"
+                      style={{ background: "#0f1f0f", color: "#6fbf6f", border: "1px solid #1a3a1a" }}
+                    >
+                      {acting === item.id ? "…" : "Одобрить"}
+                    </button>
+                    <button
+                      disabled={acting === item.id}
+                      onClick={() => { setRejectId(item.id); setRejectComment(""); }}
+                      className="px-3 py-1.5 rounded text-[12px] font-medium transition-colors disabled:opacity-40"
+                      style={{ background: "#1a0808", color: "#bf6f6f", border: "1px solid #3a1a1a" }}
+                    >
+                      Отклонить
+                    </button>
+                  </div>
+                )}
+              </div>
+              {rejectId === item.id && (
+                <div className="mt-4 pt-4" style={{ borderTop: "1px solid #1c1c1c" }}>
+                  <textarea
+                    value={rejectComment}
+                    onChange={e => setRejectComment(e.target.value)}
+                    placeholder="Причина отказа (необязательно)…"
+                    rows={2}
+                    className="w-full px-3 py-2 rounded text-[13px] outline-none resize-none mb-3"
+                    style={{ background: "#111", border: "1px solid #222", color: "#e0e0e0" }}
+                  />
+                  <div className="flex gap-2">
+                    <button onClick={() => act(item.id, "reject", rejectComment)} className="px-3 py-1.5 rounded text-[12px] font-medium" style={{ background: "#1a0808", color: "#bf6f6f", border: "1px solid #3a1a1a" }}>Подтвердить отказ</button>
+                    <button onClick={() => setRejectId(null)} className="px-3 py-1.5 rounded text-[12px] font-medium" style={{ background: "#111", color: "#555", border: "1px solid #222" }}>Отмена</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Section: Complaints ───────────────────────────────────────────────────────
+
+function SectionComplaints() {
+  return (
+    <div>
+      <SectionHeader title="Жалобы" sub="Раздел в разработке" />
+      <div className="rounded-xl p-12 flex flex-col items-center justify-center text-center" style={{ background: "#0a0a0a", border: "1px solid #1c1c1c" }}>
+        <svg width="32" height="32" fill="none" stroke="#333" strokeWidth="1.4" strokeLinecap="round" viewBox="0 0 24 24" className="mb-4">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+        </svg>
+        <p className="text-sm font-medium" style={{ color: "#555" }}>Раздел жалоб будет доступен в следующей версии</p>
+        <p className="text-[12px] mt-1" style={{ color: "#333" }}>Функционал находится в разработке</p>
+      </div>
+    </div>
+  );
+}
+
+// ── Section: Stats ────────────────────────────────────────────────────────────
+
+function SectionStats({ stats }: { stats: Stats }) {
+  const rows = [
+    { label: "Всего локаций",          value: stats.locations },
+    { label: "Активных партнёров",     value: stats.partners },
+    { label: "Одобренных объявлений",  value: stats.activeServices },
+    { label: "Ожидают модерации",      value: stats.pendingServices },
+  ];
+
+  return (
+    <div>
+      <SectionHeader title="Статистика" sub="Общие показатели платформы TooGo" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+        {rows.map(r => (
+          <div key={r.label} className="rounded-xl p-6 flex items-center justify-between" style={{ background: "#0a0a0a", border: "1px solid #1c1c1c" }}>
+            <span className="text-[13px]" style={{ color: "#555" }}>{r.label}</span>
+            <span className="text-2xl font-bold tracking-tight" style={{ color: "#fff" }}>{r.value.toLocaleString("ru-RU")}</span>
+          </div>
+        ))}
+      </div>
+      <div className="rounded-xl p-6" style={{ background: "#0a0a0a", border: "1px solid #1c1c1c" }}>
+        <p className="text-[12px] font-semibold uppercase tracking-widest mb-4" style={{ color: "#333" }}>Распределение объявлений</p>
+        {[
+          { label: "Одобрено",  value: stats.activeServices,  total: stats.activeServices + stats.pendingServices },
+          { label: "На модерации", value: stats.pendingServices, total: stats.activeServices + stats.pendingServices },
+        ].map(bar => {
+          const pct = bar.total > 0 ? Math.round((bar.value / bar.total) * 100) : 0;
+          return (
+            <div key={bar.label} className="mb-4">
+              <div className="flex justify-between mb-1.5">
+                <span className="text-[12px]" style={{ color: "#555" }}>{bar.label}</span>
+                <span className="text-[12px]" style={{ color: "#444" }}>{bar.value} · {pct}%</span>
+              </div>
+              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "#111" }}>
+                <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "#fff" }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Section: Settings ─────────────────────────────────────────────────────────
+
+function SectionSettings() {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [form, setForm] = useState({ ADMIN_TELEGRAM_BOT_TOKEN: "", ADMIN_TELEGRAM_USER_ID: "" });
+
+  useEffect(() => {
+    fetch("/api/admin/settings")
+      .then(r => r.json())
+      .then(d => {
+        setForm({
+          ADMIN_TELEGRAM_BOT_TOKEN: d.ADMIN_TELEGRAM_BOT_TOKEN ?? "",
+          ADMIN_TELEGRAM_USER_ID: d.ADMIN_TELEGRAM_USER_ID ?? "",
+        });
+        setLoading(false);
+      });
+  }, []);
+
+  const save = async () => {
+    setSaving(true);
+    await fetch("/api/admin/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
+  };
+
+  if (loading) return <Loader />;
+
+  return (
+    <div>
+      <SectionHeader title="Настройки" sub="Конфигурация платформы" />
+      <div className="max-w-lg space-y-4">
+        {[
+          { key: "ADMIN_TELEGRAM_BOT_TOKEN", label: "Telegram Bot Token", placeholder: "123456:ABC-DEF…" },
+          { key: "ADMIN_TELEGRAM_USER_ID",   label: "Telegram User ID",   placeholder: "123456789" },
+        ].map(field => (
+          <div key={field.key}>
+            <label className="block text-[12px] font-medium mb-2 uppercase tracking-wider" style={{ color: "#444" }}>{field.label}</label>
+            <input
+              type="text"
+              value={form[field.key as keyof typeof form]}
+              onChange={e => setForm(f => ({ ...f, [field.key]: e.target.value }))}
+              placeholder={field.placeholder}
+              className="w-full px-4 py-2.5 rounded-lg text-[13px] outline-none transition-colors"
+              style={{ background: "#0a0a0a", border: "1px solid #1c1c1c", color: "#e0e0e0" }}
+              onFocus={e => (e.target.style.borderColor = "#333")}
+              onBlur={e => (e.target.style.borderColor = "#1c1c1c")}
+            />
+          </div>
+        ))}
+        <button
+          onClick={save}
+          disabled={saving}
+          className="px-5 py-2.5 rounded-lg text-[13px] font-semibold transition-colors disabled:opacity-50"
+          style={{ background: "#fff", color: "#000" }}
+        >
+          {saving ? "Сохранение…" : saved ? "Сохранено" : "Сохранить"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
+
+export default function AdminDashboardClient({ email, stats }: Props) {
+  const router = useRouter();
+  const [activeKey, setActiveKey] = useState("dashboard");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try { await fetch("/api/admin/logout", { method: "POST" }); }
+    finally { router.push("/admin"); }
+  };
+
+  const statCards = [
+    { label: "Локаций",       value: stats.locations,       sub: "горных мест"  },
+    { label: "Партнеров",     value: stats.partners,        sub: "активных"     },
+    { label: "Объявлений",    value: stats.activeServices,  sub: "активных"     },
+    { label: "На модерации",  value: stats.pendingServices, sub: "ожидают"      },
+  ];
+
+  const activeLabel = NAV.find(n => n.key === activeKey)?.label ?? "Dashboard";
+
+  function renderContent() {
+    switch (activeKey) {
+      case "locations":  return <SectionLocations />;
+      case "services":   return <SectionServices />;
+      case "partners":   return <SectionPartners />;
+      case "listings":   return <SectionListings />;
+      case "complaints": return <SectionComplaints />;
+      case "stats":      return <SectionStats stats={stats} />;
+      case "settings":   return <SectionSettings />;
+      default: return (
+        <>
+          <div className="mb-10">
+            <h2 className="text-2xl font-semibold tracking-tight" style={{ color: "#fff" }}>Добро пожаловать</h2>
+            <p className="mt-1 text-sm" style={{ color: "#444" }}>Актуальная статистика платформы TooGo</p>
+          </div>
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-10">
+            {statCards.map(card => (
+              <div key={card.label} className="rounded-xl p-6 flex flex-col justify-between" style={{ background: "#0a0a0a", border: "1px solid #1c1c1c", minHeight: "140px" }}>
+                <p className="text-[12px] font-medium uppercase tracking-widest" style={{ color: "#333" }}>{card.label}</p>
+                <div>
+                  <p className="text-4xl font-bold tracking-tight" style={{ color: "#fff" }}>{card.value.toLocaleString("ru-RU")}</p>
+                  <p className="text-[11px] mt-1" style={{ color: "#444" }}>{card.sub}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-4 mb-5">
+            <span className="text-[11px] font-medium uppercase tracking-widest" style={{ color: "#2a2a2a" }}>Быстрые действия</span>
+            <div className="flex-1 h-px" style={{ background: "#111" }} />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[
+              { key: "listings",  label: "Модерация",  sub: `${stats.pendingServices} заявок ожидают` },
+              { key: "locations", label: "Локации",    sub: "Управление местами" },
+              { key: "partners",  label: "Партнеры",   sub: "Управление партнёрами" },
+            ].map(action => (
+              <button
+                key={action.key}
+                onClick={() => setActiveKey(action.key)}
+                className="flex items-center justify-between px-4 py-3.5 rounded-xl text-left transition-colors"
+                style={{ background: "#0a0a0a", border: "1px solid #1c1c1c" }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = "#333")}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = "#1c1c1c")}
+              >
+                <div>
+                  <p className="text-[13px] font-medium" style={{ color: "#fff" }}>{action.label}</p>
+                  <p className="text-[11px] mt-0.5" style={{ color: "#444" }}>{action.sub}</p>
+                </div>
+                <svg width="14" height="14" fill="none" stroke="#333" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+              </button>
+            ))}
+          </div>
+        </>
+      );
+    }
+  }
+
+  return (
+    <div className="flex h-screen overflow-hidden" style={{ background: "#000", fontFamily: "'Inter', system-ui, sans-serif" }}>
+
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-20 lg:hidden" style={{ background: "rgba(0,0,0,0.85)" }} onClick={() => setSidebarOpen(false)} />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={["fixed lg:static inset-y-0 left-0 z-30 w-52 shrink-0 flex flex-col transition-transform duration-300", sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"].join(" ")}
+        style={{ background: "#000", borderRight: "1px solid #1c1c1c" }}
+      >
+        <div className="px-5 py-5" style={{ borderBottom: "1px solid #1c1c1c" }}>
+          <span className="text-sm font-semibold tracking-tight" style={{ color: "#fff" }}>TooGo</span>
+          <span className="text-sm font-normal" style={{ color: "#333" }}> / admin</span>
+        </div>
+
+        <nav className="flex-1 px-2 py-3 space-y-px overflow-y-auto">
+          {NAV.map(({ key, label, icon }) => {
+            const active = activeKey === key;
+            const badge = key === "complaints" ? "3" : key === "listings" && stats.pendingServices > 0 ? String(stats.pendingServices) : null;
             return (
               <button
-                key={item.id}
-                onClick={() => { setActive(item.id); setSidebarOpen(false); }}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left"
-                style={{
-                  backgroundColor: isActive ? "color-mix(in srgb, var(--accent) 12%, transparent)" : "transparent",
-                  color: isActive ? "var(--accent-light)" : "var(--text-secondary)",
-                }}
+                key={key}
+                onClick={() => { setActiveKey(key); setSidebarOpen(false); }}
+                className="w-full flex items-center gap-2.5 px-3 py-[9px] rounded-md text-[13px] font-medium transition-colors text-left"
+                style={{ background: active ? "#fff" : "transparent", color: active ? "#000" : "#555" }}
               >
-                <span style={{ color: isActive ? "var(--accent-light)" : "var(--text-muted)" }}>
-                  {item.icon}
-                </span>
-                {item.label}
-                {item.id === "listings" && (
-                  <span className="ml-auto text-xs px-1.5 py-0.5 rounded-full font-semibold"
-                    style={{ background: "rgba(245,158,11,0.15)", color: "#f59e0b" }}>0</span>
+                <span style={{ color: active ? "#000" : "#444" }}>{icon}</span>
+                <span className="flex-1">{label}</span>
+                {badge && (
+                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ background: active ? "#000" : "#1c1c1c", color: active ? "#fff" : "#888" }}>
+                    {badge}
+                  </span>
                 )}
               </button>
             );
           })}
         </nav>
 
-        {/* Logout */}
-        <div className="px-3 py-4 shrink-0" style={{ borderTop: "1px solid var(--border)" }}>
+        <div className="px-2 py-3 space-y-px" style={{ borderTop: "1px solid #1c1c1c" }}>
+          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-md" style={{ background: "#0a0a0a" }}>
+            <div className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0" style={{ background: "#1c1c1c", color: "#fff" }}>
+              {email.charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="text-[12px] font-medium truncate" style={{ color: "#e0e0e0" }}>{email}</p>
+              <p className="text-[10px]" style={{ color: "#333" }}>Администратор</p>
+            </div>
+          </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all"
-            style={{ color: "#f87171", backgroundColor: "rgba(248,113,113,0.0)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(248,113,113,0.08)")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+            disabled={loggingOut}
+            className="w-full flex items-center gap-2.5 px-3 py-[9px] rounded-md text-[13px] font-medium transition-colors text-left"
+            style={{ color: "#444" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "#fff"; (e.currentTarget as HTMLButtonElement).style.background = "#111"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "#444"; (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
           >
-            {Icons.logout}
-            Выйти
+            {loggingOut
+              ? <svg className="w-[15px] h-[15px] animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+              : <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+            }
+            Выход
           </button>
         </div>
       </aside>
 
-      {/* ── Main ── */}
+      {/* Main */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-
-        {/* Topbar */}
-        <header className="flex items-center justify-between px-5 h-16 shrink-0"
-          style={{ backgroundColor: "var(--bg-secondary)", borderBottom: "1px solid var(--border)" }}>
-
+        <header className="flex items-center justify-between px-6 py-3.5 shrink-0" style={{ background: "#000", borderBottom: "1px solid #1c1c1c" }}>
           <div className="flex items-center gap-3">
-            <button className="lg:hidden" onClick={() => setSidebarOpen(true)}
-              style={{ color: "var(--text-secondary)" }}>
-              {Icons.menu}
+            <button className="lg:hidden p-1.5 rounded-md" style={{ color: "#555" }} onClick={() => setSidebarOpen(true)}>
+              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
             </button>
-            <div>
-              <h1 className="text-base font-bold" style={{ color: "var(--text-primary)" }}>
-                {NAV_ITEMS.find((n) => n.id === active)?.label ?? "Dashboard"}
-              </h1>
-              <p className="text-xs hidden sm:block" style={{ color: "var(--text-muted)" }}>
-                TooGo Admin Panel
-              </p>
-            </div>
+            <span className="text-sm font-medium" style={{ color: "#fff" }}>{activeLabel}</span>
           </div>
-
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
-
-            {/* Bell */}
-            <button className="relative w-9 h-9 rounded-xl flex items-center justify-center transition-all"
-              style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}>
-              {Icons.bell}
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#f59e0b]" />
-            </button>
-
-            {/* Avatar */}
-            <div className="flex items-center gap-2.5 pl-3" style={{ borderLeft: "1px solid var(--border)" }}>
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold text-white"
-                style={{ background: "linear-gradient(135deg, #16a34a, #22c55e)" }}>
-                {initials}
-              </div>
-              <div className="hidden sm:block">
-                <p className="text-xs font-semibold leading-none mb-0.5" style={{ color: "var(--text-primary)" }}>
-                  Администратор
-                </p>
-                <p className="text-xs leading-none" style={{ color: "var(--text-muted)" }}>{email}</p>
-              </div>
-            </div>
-          </div>
+          <span className="text-xs" style={{ color: "#333" }}>{email}</span>
         </header>
 
-        {/* Content */}
-        <main className="flex-1 overflow-y-auto p-5 lg:p-6">
-
-          {active === "dashboard" && (
-            <div className="space-y-6">
-
-              {/* Stat cards */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {STATS.map((s) => (
-                  <div key={s.label} className="rounded-2xl p-5"
-                    style={{ backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border)" }}>
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                        style={{ background: s.bg }}>
-                        <svg className="w-5 h-5" style={{ color: s.color }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                        </svg>
-                      </div>
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                        style={{ background: s.bg, color: s.color }}>
-                        {s.change}
-                      </span>
-                    </div>
-                    <div className="text-2xl font-bold mb-0.5" style={{ color: "var(--text-primary)" }}>
-                      {s.value}
-                    </div>
-                    <div className="text-xs" style={{ color: "var(--text-muted)" }}>{s.label}</div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Bottom row */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-
-                {/* Recent activity */}
-                <div className="lg:col-span-2 rounded-2xl p-5"
-                  style={{ backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border)" }}>
-                  <h2 className="text-sm font-bold mb-4" style={{ color: "var(--text-primary)" }}>
-                    Последние действия
-                  </h2>
-                  <div className="space-y-3">
-                    {ACTIVITY.map((a, i) => (
-                      <div key={i} className="flex items-start gap-3">
-                        <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5"
-                          style={{ background: `${a.color}18`, color: a.color }}>
-                          {a.type === "approved" ? Icons.check : Icons.clock}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm leading-snug" style={{ color: "var(--text-primary)" }}>{a.text}</p>
-                          <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{a.time}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Quick actions */}
-                <div className="rounded-2xl p-5"
-                  style={{ backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border)" }}>
-                  <h2 className="text-sm font-bold mb-4" style={{ color: "var(--text-primary)" }}>
-                    Быстрые действия
-                  </h2>
-                  <div className="space-y-2">
-                    {[
-                      { label: "Добавить локацию",   icon: Icons.locations,   color: "#22c55e" },
-                      { label: "Проверить объявления", icon: Icons.listings,  color: "#f59e0b" },
-                      { label: "Посмотреть партнёров", icon: Icons.partners,  color: "#3b82f6" },
-                      { label: "Статистика",          icon: Icons.stats,      color: "#a855f7" },
-                    ].map((q) => (
-                      <button
-                        key={q.label}
-                        onClick={() => setActive(q.label === "Добавить локацию" ? "locations" : q.label === "Проверить объявления" ? "listings" : q.label === "Посмотреть партнёров" ? "partners" : "stats")}
-                        className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm text-left transition-all"
-                        style={{ backgroundColor: "var(--bg-primary)", border: "1px solid var(--border)" }}
-                        onMouseEnter={(e) => (e.currentTarget.style.borderColor = q.color)}
-                        onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
-                      >
-                        <span style={{ color: q.color }}>{q.icon}</span>
-                        <span style={{ color: "var(--text-secondary)" }}>{q.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ── Services section ── */}
-          {active === "services" && (
-            <div className="space-y-6">
-              {/* Header */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>Категории услуг</h2>
-                  <p className="text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>Управление категориями услуг партнёров</p>
-                </div>
-                <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
-                  style={{ background: "linear-gradient(135deg,#16a34a,#22c55e)" }}>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
-                  </svg>
-                  Добавить категорию
-                </button>
-              </div>
-
-              {/* Category cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {categories.map((cat) => (
-                  <div key={cat.id}
-                    className="rounded-2xl p-5 flex items-center gap-4 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg group"
-                    style={{ backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border)" }}>
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0"
-                      style={{ backgroundColor: "color-mix(in srgb, var(--accent) 10%, transparent)" }}>
-                      {cat.icon ?? "📦"}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm truncate" style={{ color: "var(--text-primary)" }}>{cat.name}</p>
-                      <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{cat.count} объявлений</p>
-                    </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                        style={{ backgroundColor: "color-mix(in srgb, var(--accent) 12%, transparent)", color: "var(--accent-light)" }}>
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                {svcLoading && categories.length === 0 && (
-                  <div className="col-span-4 flex justify-center py-8">
-                    <div className="w-6 h-6 border-2 rounded-full animate-spin"
-                      style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }} />
-                  </div>
-                )}
-              </div>
-
-              {/* Services table */}
-              <div className="rounded-2xl overflow-hidden"
-                style={{ backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border)" }}>
-                <div className="px-5 py-4 flex items-center justify-between"
-                  style={{ borderBottom: "1px solid var(--border)" }}>
-                  <h3 className="font-bold text-sm" style={{ color: "var(--text-primary)" }}>Все объявления услуг</h3>
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm"
-                      style={{ backgroundColor: "var(--bg-primary)", border: "1px solid var(--border)" }}>
-                      <svg className="w-3.5 h-3.5" style={{ color: "var(--text-muted)" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                      </svg>
-                      <input placeholder="Поиск..." className="bg-transparent outline-none text-xs w-32"
-                        style={{ color: "var(--text-primary)" }}
-                        value={svcSearch}
-                        onChange={(e) => setSvcSearch(e.target.value)} />
-                    </div>
-                    <select className="px-3 py-1.5 rounded-lg text-xs outline-none"
-                      style={{ backgroundColor: "var(--bg-primary)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
-                      value={svcStatus}
-                      onChange={(e) => setSvcStatus(e.target.value)}>
-                      <option value="all">Все статусы</option>
-                      <option value="pending">На модерации</option>
-                      <option value="approved">Одобрено</option>
-                      <option value="rejected">Отклонено</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Table or empty state */}
-                {svcLoading ? (
-                  <div className="flex justify-center py-16">
-                    <div className="w-6 h-6 border-2 rounded-full animate-spin"
-                      style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }} />
-                  </div>
-                ) : services.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16">
-                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-                      style={{ backgroundColor: "color-mix(in srgb, var(--accent) 10%, transparent)" }}>
-                      <svg className="w-7 h-7" style={{ color: "var(--accent-light)" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                      </svg>
-                    </div>
-                    <p className="text-sm font-medium mb-1" style={{ color: "var(--text-primary)" }}>Объявлений пока нет</p>
-                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>Объявления партнёров появятся здесь после регистрации</p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                          {["Название","Категория","Локация","Партнёр","Цена","Статус","Дата"].map((h) => (
-                            <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider"
-                              style={{ color: "var(--text-muted)" }}>{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {services.map((s) => {
-                          const statusColors: Record<string, string> = {
-                            pending:  "#f59e0b",
-                            approved: "#22c55e",
-                            rejected: "#f87171",
-                            deleted:  "#94a3b8",
-                          };
-                          const statusLabels: Record<string, string> = {
-                            pending:  "На модерации",
-                            approved: "Одобрено",
-                            rejected: "Отклонено",
-                            deleted:  "Удалено",
-                          };
-                          return (
-                            <tr key={s.id} style={{ borderBottom: "1px solid var(--border)" }}
-                              className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
-                              <td className="px-4 py-3 font-medium" style={{ color: "var(--text-primary)" }}>{s.title}</td>
-                              <td className="px-4 py-3" style={{ color: "var(--text-secondary)" }}>{s.category}</td>
-                              <td className="px-4 py-3" style={{ color: "var(--text-secondary)" }}>{s.location}</td>
-                              <td className="px-4 py-3" style={{ color: "var(--text-secondary)" }}>{s.partner}</td>
-                              <td className="px-4 py-3" style={{ color: "var(--text-secondary)" }}>
-                                {s.price ? `${s.price} ${s.currency ?? "сом"}` : "—"}
-                              </td>
-                              <td className="px-4 py-3">
-                                <span className="text-xs font-medium px-2 py-1 rounded-full"
-                                  style={{ background: `${statusColors[s.status]}18`, color: statusColors[s.status] }}>
-                                  {statusLabels[s.status] ?? s.status}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3 text-xs" style={{ color: "var(--text-muted)" }}>
-                                {new Date(s.createdAt).toLocaleDateString("ru-RU")}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Placeholder for other sections */}
-          {active !== "dashboard" && active !== "services" && (
-            <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
-                style={{ backgroundColor: "color-mix(in srgb, var(--accent) 10%, transparent)", color: "var(--accent-light)" }}>
-                {NAV_ITEMS.find((n) => n.id === active)?.icon}
-              </div>
-              <h2 className="text-lg font-bold mb-2" style={{ color: "var(--text-primary)" }}>
-                {NAV_ITEMS.find((n) => n.id === active)?.label}
-              </h2>
-              <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                Раздел в разработке
-              </p>
-            </div>
-          )}
+        <main className="flex-1 overflow-y-auto p-8" style={{ background: "#000" }}>
+          {renderContent()}
         </main>
       </div>
     </div>

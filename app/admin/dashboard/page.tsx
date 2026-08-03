@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSession } from "../../lib/auth";
+import { prisma } from "../../lib/prisma";
 import AdminDashboardClient from "./AdminDashboardClient";
 
 export default async function AdminDashboardPage() {
@@ -8,5 +9,18 @@ export default async function AdminDashboardPage() {
     redirect("/admin");
   }
 
-  return <AdminDashboardClient email={session.email} />;
+  const [locations, partners, activeServices, pendingServices] =
+    await Promise.all([
+      prisma.location.count({ where: { status: "active" } }),
+      prisma.user.count({ where: { role: "partner", status: "active" } }),
+      prisma.partnerService.count({ where: { status: "approved" } }),
+      prisma.partnerService.count({ where: { status: "pending" } }),
+    ]);
+
+  return (
+    <AdminDashboardClient
+      email={session.email}
+      stats={{ locations, partners, activeServices, pendingServices }}
+    />
+  );
 }
