@@ -56,24 +56,42 @@ enum ModerationAction {
 }
 
 // ─────────────────────────────────────────────
+// BUSINESS TYPES
+// ─────────────────────────────────────────────
+
+model BusinessType {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique @db.VarChar(100)
+  icon       String   @db.VarChar(10)
+  created_at DateTime @default(now())
+
+  // Relations
+  users User[]
+
+  @@map("business_types")
+}
+
+// ─────────────────────────────────────────────
 // USERS
 // ─────────────────────────────────────────────
 
 model User {
-  id            BigInt     @id @default(autoincrement())
-  full_name     String     @db.VarChar(150)
-  email         String     @unique @db.VarChar(150)
-  password_hash String     @db.Text
-  phone         String?    @unique @db.VarChar(20)
-  whatsapp      String?    @db.VarChar(20)
-  telegram      String?    @db.VarChar(100)
-  role          Role       @default(partner)
-  status        UserStatus @default(active)
-  created_at    DateTime   @default(now())
-  updated_at    DateTime   @updatedAt
-  last_login    DateTime?
+  id               BigInt        @id @default(autoincrement())
+  full_name        String        @db.VarChar(150)
+  email            String        @unique @db.VarChar(150)
+  password_hash    String        @db.Text
+  phone            String?       @unique @db.VarChar(20)
+  whatsapp         String?       @db.VarChar(20)
+  telegram         String?       @db.VarChar(100)
+  role             Role          @default(partner)
+  status           UserStatus    @default(active)
+  business_type_id Int?
+  created_at       DateTime      @default(now())
+  updated_at       DateTime      @updatedAt
+  last_login       DateTime?
 
   // Relations
+  business_type      BusinessType?       @relation(fields: [business_type_id], references: [id])
   services           PartnerService[]
   moderation_history ModerationHistory[] @relation("AdminModerations")
   admin_otp          AdminOtp?

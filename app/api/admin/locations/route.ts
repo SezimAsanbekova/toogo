@@ -54,19 +54,36 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const {
-    name, region_id, description, altitude, distance_km,
+    name, region, description, altitude, distance_km,
     travel_time, difficulty, visit_price, best_season,
     recommendations, is_popular, status,
   } = body;
 
-  if (!name || !region_id) {
+  if (!name) {
     return NextResponse.json({ error: "MISSING_FIELDS" }, { status: 400 });
+  }
+
+  // Find or create region
+  let regionRecord = null;
+  if (region) {
+    regionRecord = await prisma.region.upsert({
+      where: { name: region },
+      update: {},
+      create: { name: region },
+    });
+  } else {
+    // Use a default "Другой" region if not provided
+    regionRecord = await prisma.region.upsert({
+      where: { name: "Другой" },
+      update: {},
+      create: { name: "Другой" },
+    });
   }
 
   const location = await prisma.location.create({
     data: {
       name,
-      region_id: Number(region_id),
+      region_id: regionRecord.id,
       description: description || null,
       altitude: altitude ? Number(altitude) : null,
       distance_km: distance_km ? Number(distance_km) : null,

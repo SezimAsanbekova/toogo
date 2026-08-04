@@ -371,11 +371,10 @@ function PhotoManager({ locationId }: { locationId: string }) {
 
 interface Region { id: number; name: string; }
 
-const EMPTY_LOC = { name: "", region_id: "", description: "", altitude: "", distance_km: "", travel_time: "", difficulty: "", visit_price: "", best_season: "", recommendations: "", is_popular: false, status: "active" };
+const EMPTY_LOC = { name: "", region: "", description: "", altitude: "", distance_km: "", travel_time: "", difficulty: "", visit_price: "", best_season: "", recommendations: "", is_popular: false, status: "active" };
 
 function SectionLocations() {
   const [data, setData] = useState<Location[]>([]);
-  const [regions, setRegions] = useState<Region[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("all");
@@ -387,12 +386,8 @@ function SectionLocations() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [locRes, regRes] = await Promise.all([
-      fetch(`/api/admin/locations?q=${encodeURIComponent(q)}&status=${status}`),
-      fetch("/api/admin/locations?type=regions"),
-    ]);
-    setData(await locRes.json());
-    setRegions(await regRes.json());
+    const res = await fetch(`/api/admin/locations?q=${encodeURIComponent(q)}&status=${status}`);
+    setData(await res.json());
     setLoading(false);
   }, [q, status]);
 
@@ -400,7 +395,7 @@ function SectionLocations() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.region_id) { setErr("Заполните название и регион"); return; }
+    if (!form.name) { setErr("Заполните название"); return; }
     setSaving(true); setErr("");
     const res = await fetch("/api/admin/locations", {
       method: "POST",
@@ -452,11 +447,8 @@ function SectionLocations() {
               <input {...F("name")} placeholder="Ала-Арча" />
             </div>
             <div>
-              <label className="block text-[11px] uppercase tracking-wider mb-1.5" style={{ color: "#444" }}>Регион *</label>
-              <select {...F("region_id")} className={inputCls} style={inputStyle}>
-                <option value="">Выберите регион</option>
-                {regions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-              </select>
+              <label className="block text-[11px] uppercase tracking-wider mb-1.5" style={{ color: "#444" }}>Регион</label>
+              <input {...F("region")} placeholder="Чуйская область" />
             </div>
             <div>
               <label className="block text-[11px] uppercase tracking-wider mb-1.5" style={{ color: "#444" }}>Высота (м)</label>
@@ -1002,6 +994,9 @@ function SectionSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [webhookSaving, setWebhookSaving] = useState(false);
+  const [webhookMsg, setWebhookMsg] = useState("");
+  const [siteUrl, setSiteUrl] = useState("");
   const [form, setForm] = useState({ ADMIN_TELEGRAM_BOT_TOKEN: "", ADMIN_TELEGRAM_USER_ID: "" });
 
   useEffect(() => {
@@ -1014,6 +1009,7 @@ function SectionSettings() {
         });
         setLoading(false);
       });
+    setSiteUrl(window.location.origin);
   }, []);
 
   const save = async () => {
@@ -1028,7 +1024,23 @@ function SectionSettings() {
     setTimeout(() => setSaved(false), 2500);
   };
 
+  const setWebhook = async () => {
+    setWebhookSaving(true);
+    setWebhookMsg("");
+    const res = await fetch("/api/telegram/set-webhook", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ siteUrl }),
+    });
+    const data = await res.json();
+    setWebhookMsg(data.ok ? `✅ Webhook установлен: ${data.webhookUrl}` : `❌ Ошибка: ${data.description ?? data.error}`);
+    setWebhookSaving(false);
+  };
+
   if (loading) return <Loader />;
+
+  const inputCls = "w-full px-4 py-2.5 rounded-lg text-[13px] outline-none transition-colors";
+  const inputStyle = { background: "#0a0a0a", border: "1px solid #1c1c1c", color: "#e0e0e0" };
 
   return (
     <div>
@@ -1045,21 +1057,51 @@ function SectionSettings() {
               value={form[field.key as keyof typeof form]}
               onChange={e => setForm(f => ({ ...f, [field.key]: e.target.value }))}
               placeholder={field.placeholder}
-              className="w-full px-4 py-2.5 rounded-lg text-[13px] outline-none transition-colors"
-              style={{ background: "#0a0a0a", border: "1px solid #1c1c1c", color: "#e0e0e0" }}
+              className={inputCls} style={inputStyle}
               onFocus={e => (e.target.style.borderColor = "#333")}
               onBlur={e => (e.target.style.borderColor = "#1c1c1c")}
             />
           </div>
         ))}
-        <button
-          onClick={save}
-          disabled={saving}
+        <button onClick={save} disabled={saving}
           className="px-5 py-2.5 rounded-lg text-[13px] font-semibold transition-colors disabled:opacity-50"
-          style={{ background: "#fff", color: "#000" }}
-        >
-          {saving ? "Сохранение…" : saved ? "Сохранено" : "Сохранить"}
+          style={{ background: "#fff", color: "#000" }}>
+          {saving ? "Сохранение…" : saved ? "✓ Сохранено" : "Сохранить"}
         </button>
+
+        {/* Webhook */}
+        <div className="pt-4" style={{ borderTop: "1px solid #1c1c1c" }}>
+          <p className="text-[12px] font-semibold uppercase tracking-wider mb-3" style={{ color: "#444" }}>
+            Telegram Webhook
+          </p>
+          <p className="text-[12px] mb-3" style={{ color: "#555" }}>
+            Укажите URL сайта чтобы Telegram мог отправлять нажатия кнопок
+          </p>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-[12px] font-medium mb-2 uppercase tracking-wider" style={{ color: "#444" }}>URL сайта</label>
+              <input
+                type="url"
+                value={siteUrl}
+                onChange={e => setSiteUrl(e.target.value)}
+                placeholder="https://toogo.kg"
+                className={inputCls} style={inputStyle}
+                onFocus={e => (e.target.style.borderColor = "#333")}
+                onBlur={e => (e.target.style.borderColor = "#1c1c1c")}
+              />
+            </div>
+            <button onClick={setWebhook} disabled={webhookSaving || !siteUrl}
+              className="px-5 py-2.5 rounded-lg text-[13px] font-semibold transition-colors disabled:opacity-50"
+              style={{ background: "#0a0a0a", color: "#e0e0e0", border: "1px solid #1c1c1c" }}>
+              {webhookSaving ? "Установка…" : "🔗 Установить webhook"}
+            </button>
+            {webhookMsg && (
+              <p className="text-[12px]" style={{ color: webhookMsg.startsWith("✅") ? "#4a9a4a" : "#a05050" }}>
+                {webhookMsg}
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -17,3 +17,11 @@ export async function requireAdmin(): Promise<JwtPayload> {
   }
   return session;
 }
+
+export async function requirePartner(): Promise<JwtPayload> {
+  const session = await getSession();
+  if (!session || session.role !== "partner") {
+    throw new Error("UNAUTHORIZED");
+  }
+  return session;
+}
