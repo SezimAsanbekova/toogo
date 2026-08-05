@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/app/lib/prisma";
 import { requireAdmin } from "@/app/lib/auth";
+import { createNotification } from "@/app/lib/notifications";
 
 export async function GET(req: NextRequest) {
   try { await requireAdmin(); } catch {
@@ -53,6 +54,7 @@ export async function PATCH(req: NextRequest) {
   try { await requireAdmin(); } catch {
     return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   }
+
   const { id, action, comment } = await req.json();
   const session = await import("@/app/lib/auth").then(m => m.getSession());
 
@@ -63,6 +65,13 @@ export async function PATCH(req: NextRequest) {
   };
   const newStatus = statusMap[action];
   if (!newStatus) return NextResponse.json({ error: "INVALID_ACTION" }, { status: 400 });
+
+  // Get service + partner info before update
+  const service = await prisma.partnerService.findUnique({
+    where: { id: BigInt(id) },
+    include: { partner: { select: { id: true, full_name: true } } },
+  });
+  if (!service) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
 
   await prisma.$transaction([
     prisma.partnerService.update({
@@ -82,6 +91,23 @@ export async function PATCH(req: NextRequest) {
       },
     }),
   ]);
+
+  // Send in-app notification to partner
+  const partnerId = String(service.partner.id);
+
+  if (action === "approve") {
+    await createNotification(
+      partnerId,
+      "✅ Услуга одобрена",
+      `Ваша услуга «${service.title}» прошла модерацию и теперь опубликована на сайте TooGo.`
+    );
+  } else if (action === "reject") {
+    await createNotification(
+      partnerId,
+      "❌ Услуга отклонена",
+      `Ваша услуга «${service.title}» не прошла модерацию.${comment ? ` Причина: ${comment}` : ""}`
+    );
+  }
 
   return NextResponse.json({ ok: true });
 }
