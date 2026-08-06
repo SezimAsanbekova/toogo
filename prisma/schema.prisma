@@ -299,17 +299,36 @@ model Notification {
 // ─────────────────────────────────────────────
 
 model LocationRequest {
-  id           BigInt   @id @default(autoincrement())
-  partner_id   BigInt
-  name         String   @db.VarChar(200)
-  region       String   @db.VarChar(100)
-  description  String?  @db.Text
-  status       String   @default("pending") @db.VarChar(20)
-  created_at   DateTime @default(now())
+  id              BigInt   @id @default(autoincrement())
+  partner_id      BigInt
+  name            String   @db.VarChar(200)
+  region          String   @db.VarChar(100)
+  description     String?  @db.Text
+  altitude        Int?
+  distance_km     Int?
+  travel_time     String?  @db.VarChar(50)
+  difficulty      String?  @db.VarChar(20)
+  visit_price     Decimal? @db.Decimal(10, 2)
+  best_season     String?  @db.VarChar(20)
+  recommendations String?  @db.Text
+  status          String   @default("pending") @db.VarChar(20)
+  created_at      DateTime @default(now())
 
-  partner User @relation(fields: [partner_id], references: [id], onDelete: Cascade)
+  partner User                    @relation(fields: [partner_id], references: [id], onDelete: Cascade)
+  photos  LocationRequestPhoto[]
 
   @@map("location_requests")
+}
+
+model LocationRequestPhoto {
+  id         BigInt   @id @default(autoincrement())
+  request_id BigInt
+  image_url  String   @db.Text
+  created_at DateTime @default(now())
+
+  request LocationRequest @relation(fields: [request_id], references: [id], onDelete: Cascade)
+
+  @@map("location_request_photos")
 }
 
 // ─────────────────────────────────────────────

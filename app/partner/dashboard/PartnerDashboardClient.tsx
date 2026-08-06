@@ -98,7 +98,7 @@ interface ServicesSectionProps {
 
 function ServicesSection({ services, categories, locations, user, deleting, onDelete, onAdd }: ServicesSectionProps) {
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ title:"", description:"", category_id:"", location_id:"", price:"", currency:"KGS", phone:user.phone??"", telegram:user.telegram??"", custom_category:"", new_location_name:"", new_location_region:"", new_location_desc:"", photos:[] as File[] });
+  const [form, setForm] = useState({ title:"", description:"", category_id:"", location_id:"", price:"", currency:"KGS", phone:user.phone??"", telegram:user.telegram??"", custom_category:"", new_location_name:"", new_location_region:"", new_location_desc:"", new_location_altitude:"", new_location_distance:"", new_location_travel_time:"", new_location_difficulty:"", new_location_price:"", new_location_season:"", new_location_rec:"", photos:[] as File[], loc_photos:[] as File[] });
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
   const [done, setDone] = useState(false);
@@ -109,7 +109,7 @@ function ServicesSection({ services, categories, locations, user, deleting, onDe
   const oF = (e: React.FocusEvent<HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement>) => (e.target.style.borderColor="#4ade80");
   const oB = (e: React.FocusEvent<HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement>) => (e.target.style.borderColor="rgba(255,255,255,0.1)");
   const F = (k: keyof typeof form) => ({ value:form[k], onChange:(e: React.ChangeEvent<HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement>)=>setForm(f=>({...f,[k]:e.target.value})), onFocus:oF, onBlur:oB });
-  const closeForm = () => { setShowForm(false); setErr(""); setDone(false); setForm({title:"",description:"",category_id:"",location_id:"",price:"",currency:"KGS",phone:user.phone??"",telegram:user.telegram??"",custom_category:"",new_location_name:"",new_location_region:"",new_location_desc:"",photos:[]}); };
+  const closeForm = () => { setShowForm(false); setErr(""); setDone(false); setForm({title:"",description:"",category_id:"",location_id:"",price:"",currency:"KGS",phone:user.phone??"",telegram:user.telegram??"",custom_category:"",new_location_name:"",new_location_region:"",new_location_desc:"",new_location_altitude:"",new_location_distance:"",new_location_travel_time:"",new_location_difficulty:"",new_location_price:"",new_location_season:"",new_location_rec:"",photos:[],loc_photos:[]}); };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,18 +120,29 @@ function ServicesSection({ services, categories, locations, user, deleting, onDe
     }
     setSaving(true); setErr("");
 
-    // If new location — submit request first
+    // If new location — submit request with all fields and photos
     if (form.location_id === "__new__") {
-      const locRes = await fetch("/api/partner/location-requests", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ name: form.new_location_name, region: form.new_location_region, description: form.new_location_desc }),
-      });
+      if (!form.new_location_name || !form.new_location_region) {
+        setErr("Укажите название и регион новой локации"); setSaving(false); return;
+      }
+      if (form.loc_photos.length === 0) {
+        setErr("Добавьте хотя бы одно фото локации"); setSaving(false); return;
+      }
+      const fd = new FormData();
+      fd.append("name", form.new_location_name);
+      fd.append("region", form.new_location_region);
+      if (form.new_location_desc) fd.append("description", form.new_location_desc);
+      if (form.new_location_altitude) fd.append("altitude", form.new_location_altitude);
+      if (form.new_location_distance) fd.append("distance_km", form.new_location_distance);
+      if (form.new_location_travel_time) fd.append("travel_time", form.new_location_travel_time);
+      if (form.new_location_difficulty) fd.append("difficulty", form.new_location_difficulty);
+      if (form.new_location_price) fd.append("visit_price", form.new_location_price);
+      if (form.new_location_season) fd.append("best_season", form.new_location_season);
+      if (form.new_location_rec) fd.append("recommendations", form.new_location_rec);
+      form.loc_photos.forEach(f => fd.append("photos", f));
+      const locRes = await fetch("/api/partner/location-requests", { method: "POST", body: fd });
       if (!locRes.ok) { setErr("Ошибка отправки заявки на локацию"); setSaving(false); return; }
-      // Can't link service to pending location — notify and stop
-      setSaving(false);
-      setDone(true);
-      return;
+      setSaving(false); setDone(true); return;
     }
 
     // Create service
@@ -273,15 +284,65 @@ function ServicesSection({ services, categories, locations, user, deleting, onDe
                       </select>
                       {/* New location form */}
                       {form.location_id === "__new__" && (
-                        <div className="mt-2 p-3 rounded-xl bg-green-50 border border-green-200 space-y-2">
-                          <p className="text-xs font-semibold text-green-700">Новая локация (отправится на рассмотрение администратору)</p>
-                          <input value={form.new_location_name} onChange={e=>setForm(f=>({...f,new_location_name:e.target.value}))}
-                            placeholder="Название места *" className="w-full px-3 py-2 rounded-lg text-sm outline-none border border-green-200 bg-white text-gray-900 placeholder-gray-400" />
-                          <input value={form.new_location_region} onChange={e=>setForm(f=>({...f,new_location_region:e.target.value}))}
-                            placeholder="Регион *" className="w-full px-3 py-2 rounded-lg text-sm outline-none border border-green-200 bg-white text-gray-900 placeholder-gray-400" />
+                        <div className="mt-2 p-4 rounded-xl bg-green-50 border border-green-200 space-y-3">
+                          <p className="text-xs font-semibold text-green-700">🏔 Новая локация — уйдёт на рассмотрение администратору</p>
+                          <div className="grid grid-cols-2 gap-2">
+                            <input value={form.new_location_name} onChange={e=>setForm(f=>({...f,new_location_name:e.target.value}))}
+                              placeholder="Название *" className="px-3 py-2 rounded-lg text-sm outline-none border border-green-200 bg-white text-gray-900 placeholder-gray-400" />
+                            <input value={form.new_location_region} onChange={e=>setForm(f=>({...f,new_location_region:e.target.value}))}
+                              placeholder="Регион *" className="px-3 py-2 rounded-lg text-sm outline-none border border-green-200 bg-white text-gray-900 placeholder-gray-400" />
+                            <input value={form.new_location_altitude} onChange={e=>setForm(f=>({...f,new_location_altitude:e.target.value}))}
+                              type="number" placeholder="Высота (м)" className="px-3 py-2 rounded-lg text-sm outline-none border border-green-200 bg-white text-gray-900 placeholder-gray-400" />
+                            <input value={form.new_location_distance} onChange={e=>setForm(f=>({...f,new_location_distance:e.target.value}))}
+                              type="number" placeholder="Расстояние (км)" className="px-3 py-2 rounded-lg text-sm outline-none border border-green-200 bg-white text-gray-900 placeholder-gray-400" />
+                            <input value={form.new_location_travel_time} onChange={e=>setForm(f=>({...f,new_location_travel_time:e.target.value}))}
+                              placeholder="Время в пути" className="px-3 py-2 rounded-lg text-sm outline-none border border-green-200 bg-white text-gray-900 placeholder-gray-400" />
+                            <select value={form.new_location_difficulty} onChange={e=>setForm(f=>({...f,new_location_difficulty:e.target.value}))}
+                              className="px-3 py-2 rounded-lg text-sm outline-none border border-green-200 bg-white text-gray-900">
+                              <option value="">Сложность</option>
+                              <option value="easy">Лёгкий</option>
+                              <option value="medium">Средний</option>
+                              <option value="hard">Сложный</option>
+                            </select>
+                            <input value={form.new_location_price} onChange={e=>setForm(f=>({...f,new_location_price:e.target.value}))}
+                              type="number" placeholder="Цена посещения" className="px-3 py-2 rounded-lg text-sm outline-none border border-green-200 bg-white text-gray-900 placeholder-gray-400" />
+                            <select value={form.new_location_season} onChange={e=>setForm(f=>({...f,new_location_season:e.target.value}))}
+                              className="px-3 py-2 rounded-lg text-sm outline-none border border-green-200 bg-white text-gray-900">
+                              <option value="">Лучший сезон</option>
+                              <option value="spring">Весна</option>
+                              <option value="summer">Лето</option>
+                              <option value="autumn">Осень</option>
+                              <option value="winter">Зима</option>
+                              <option value="all_year">Круглый год</option>
+                            </select>
+                          </div>
                           <textarea value={form.new_location_desc} onChange={e=>setForm(f=>({...f,new_location_desc:e.target.value}))}
-                            placeholder="Описание (необязательно)" rows={2}
+                            placeholder="Описание локации…" rows={2}
                             className="w-full px-3 py-2 rounded-lg text-sm outline-none border border-green-200 bg-white text-gray-900 placeholder-gray-400 resize-none" />
+                          <textarea value={form.new_location_rec} onChange={e=>setForm(f=>({...f,new_location_rec:e.target.value}))}
+                            placeholder="Рекомендации (что взять с собой…)" rows={2}
+                            className="w-full px-3 py-2 rounded-lg text-sm outline-none border border-green-200 bg-white text-gray-900 placeholder-gray-400 resize-none" />
+                          {/* Location photos */}
+                          <div>
+                            <p className="text-xs font-semibold text-green-700 mb-1.5">Фотографии локации * (до 10)</p>
+                            <label className="flex flex-col items-center justify-center gap-1.5 rounded-lg cursor-pointer border-2 border-dashed border-green-300 hover:border-green-500 bg-white transition-all p-3">
+                              <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                              <span className="text-xs text-gray-400">Добавить фото</span>
+                              <input type="file" accept="image/*" multiple className="hidden"
+                                onChange={e => { const files = Array.from(e.target.files??[]).slice(0,10); setForm(f=>({...f,loc_photos:files})); }} />
+                            </label>
+                            {form.loc_photos.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 mt-2">
+                                {form.loc_photos.map((file,i)=>(
+                                  <div key={i} className="relative w-12 h-12 rounded-lg overflow-hidden border border-green-200">
+                                    <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover" />
+                                    <button type="button" onClick={()=>setForm(f=>({...f,loc_photos:f.loc_photos.filter((_,j)=>j!==i)}))}
+                                      className="absolute top-0 right-0 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-bl">×</button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
